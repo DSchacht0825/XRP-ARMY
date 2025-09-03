@@ -5,7 +5,7 @@
     "buildCommand": "cd server && npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "cd server && npm start",
+    "startCommand": "node server/dist/index.js",
     "healthcheckPath": "/api/health"
   }
 }

@@ -2,10 +2,12 @@
   "name": "xrp-army",
   "version": "1.0.0",
   "description": "XRP Army Crypto Trading Platform",
+  "main": "server/dist/index.js",
   "scripts": {
     "build": "cd server && npm install && npm run build",
-    "start": "cd server && npm start",
-    "dev": "cd server && npm run dev"
+    "start": "node server/dist/index.js",
+    "dev": "cd server && npm run dev",
+    "railway:start": "cd server && npm run railway:start"
   },
   "engines": {
     "node": ">=18.0.0"
