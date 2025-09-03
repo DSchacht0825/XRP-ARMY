@@ -23,6 +23,7 @@ export interface TradingSignal {
   aiScore: number;
   aiReasons: string[];
   marketSentiment: 'bullish' | 'bearish' | 'neutral';
+  xrpArmySentiment?: string; // XRP Army community sentiment
   
   // Price Predictions
   predictions: {

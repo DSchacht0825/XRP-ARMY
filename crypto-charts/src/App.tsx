@@ -4,6 +4,7 @@ import CandlestickChart from './components/CandlestickChart';
 import Portfolio from './components/Portfolio';
 import Alerts from './components/Alerts';
 import TradingSignals from './components/TradingSignals';
+import Auth from './components/Auth';
 import './App.css';
 
 interface CandleData {
@@ -20,6 +21,8 @@ interface ChartData {
 }
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState<string>('charts');
   const [activeTab, setActiveTab] = useState<string>('XRPUSD');
   const [chartData, setChartData] = useState<ChartData>({
@@ -39,7 +42,52 @@ const App: React.FC = () => {
 
   const symbols = ['XRPUSD'];
 
+  // Check for existing user session on mount
   useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const ApiService = (await import('./services/api')).default;
+        const user = await ApiService.initializeAuth();
+        
+        if (user) {
+          setUser(user);
+          setIsAuthenticated(true);
+          console.log('✅ Session restored for user:', user.username);
+        } else {
+          console.log('❌ No valid session found');
+        }
+      } catch (error) {
+        console.error('❌ Auth initialization failed:', error);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  const handleAuthSuccess = (userData: any) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const ApiService = (await import('./services/api')).default;
+      await ApiService.logout();
+      console.log('✅ Logged out successfully');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Clear local storage anyway
+      localStorage.removeItem('xrp_auth_token');
+      localStorage.removeItem('xrp_user');
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
+  // WebSocket connection
+  useEffect(() => {
+    if (!isAuthenticated) return;
     const newSocket = io('http://localhost:5001', {
       transports: ['websocket'],
       reconnection: true,
@@ -111,9 +159,11 @@ const App: React.FC = () => {
     setSocket(newSocket);
 
     return () => {
-      newSocket.close();
+      if (newSocket) {
+        newSocket.close();
+      }
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Handle historical period changes
   useEffect(() => {
@@ -139,6 +189,11 @@ const App: React.FC = () => {
     return info[symbol] || { name: symbol, color: '#00AAE4' };
   };
 
+  // Show auth page if not authenticated
+  if (!isAuthenticated) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
     <div className="App">
       {/* XRP-Focused Branding Header */}
@@ -149,7 +204,21 @@ const App: React.FC = () => {
         </div>
         <div className="causory-crypto-title">
           <h2>The Ultimate XRP Trading Platform</h2>
-          <p className="xrp-tagline">Built by the XRP Army, for the XRP Army</p>
+          <p className="xrp-tagline">
+            {user?.plan === 'elite' ? '⭐ XRP General' : 
+             user?.plan === 'premium' ? '💎 XRP Lieutenant' : 
+             '🛡️ XRP Soldier'} | {user?.username || user?.email}
+          </p>
+        </div>
+        <div className="user-controls">
+          <span className={`user-plan-badge ${user?.plan || 'free'}`}>
+            {user?.plan === 'elite' ? 'ELITE' : 
+             user?.plan === 'premium' ? 'PREMIUM' : 
+             'FREE'}
+          </span>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
         </div>
       </div>
       
@@ -365,6 +434,8 @@ const App: React.FC = () => {
               'XRPUSD': chartData['XRPUSD']?.[chartData['XRPUSD'].length - 1]?.close || 0,
             }}
             marketData={chartData}
+            isPremium={user?.plan === 'premium' || user?.plan === 'elite'}
+            userPlan={user?.plan || 'free'}
           />
         </div>
       )}

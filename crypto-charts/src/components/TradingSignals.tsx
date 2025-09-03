@@ -5,15 +5,16 @@ import { AISignalGenerator } from '../utils/aiSignalGenerator';
 interface TradingSignalsProps {
   currentPrices: { [symbol: string]: number };
   marketData: { [symbol: string]: any[] };
+  isPremium?: boolean;
+  userPlan?: string;
 }
 
-const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData }) => {
+const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData, isPremium = false, userPlan = 'free' }) => {
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [stats, setStats] = useState<SignalStats | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'buy' | 'sell' | 'active'>('all');
   const [selectedSymbol, setSelectedSymbol] = useState<string>('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [isPremium, setIsPremium] = useState(false); // Simulate premium status
   const [signalPerformance, setSignalPerformance] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'newest' | 'confidence' | 'performance'>('newest');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -254,23 +255,36 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               <div className="cta-buttons">
                 <button 
                   className="demo-btn primary"
-                  onClick={() => {
-                    setShowSuccessMessage(true);
-                    setTimeout(() => {
-                      setIsPremium(true);
-                      setShowSuccessMessage(false);
-                    }, 2000);
+                  onClick={async () => {
+                    try {
+                      const ApiService = (await import('../services/api')).default;
+                      const response = await ApiService.upgradeToPremium('premium');
+                      
+                      if (response.success) {
+                        setShowSuccessMessage(true);
+                        setTimeout(() => {
+                          setShowSuccessMessage(false);
+                          setShowPremiumModal(false);
+                          window.location.reload(); // Refresh to show premium features
+                        }, 2000);
+                      } else {
+                        alert(`❌ Upgrade failed: ${response.error}`);
+                      }
+                    } catch (error) {
+                      console.error('❌ Upgrade error:', error);
+                      alert('❌ Network error. Please try again.');
+                    }
                   }}
                 >
-                  🚀 Start Free Trial
+                  🚀 Upgrade to Premium
                 </button>
                 <button 
                   className="demo-btn secondary"
                   onClick={() => {
-                    setIsPremium(true);
+                    setShowPremiumModal(false);
                   }}
                 >
-                  💎 Try Demo Version
+                  💎 Continue with Free Plan
                 </button>
               </div>
               

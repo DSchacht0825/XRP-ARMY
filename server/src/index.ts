@@ -3,19 +3,33 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import WebSocket from 'ws';
+import authRoutes from './routes/auth';
+import { database } from './database';
 // import { ExchangeManager } from './exchangeManager';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3010"],
     methods: ["GET", "POST"]
   }
 });
 
 app.use(cors());
 app.use(express.json());
+
+// Authentication routes
+app.use('/api/auth', authRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    message: 'XRP Terminal API is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 interface CandleData {
   time: number;

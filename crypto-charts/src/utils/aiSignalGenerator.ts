@@ -99,8 +99,8 @@ export class AISignalGenerator {
     };
   }
   
-  // AI Signal Generation
-  static generateSignal(symbol: string, marketData: any[]): TradingSignal {
+  // XRP-Specific AI Signal Generation
+  static generateSignal(symbol: string = 'XRPUSD', marketData: any[]): TradingSignal {
     const prices = marketData.map(d => d.close);
     const highs = marketData.map(d => d.high);
     const lows = marketData.map(d => d.low);
@@ -114,78 +114,133 @@ export class AISignalGenerator {
     const bollinger = this.calculateBollingerBands(prices);
     const { support, resistance } = this.findSupportResistance(prices, highs, lows);
     
-    // Technical Analysis Scoring
+    // XRP-Specific Technical Analysis Scoring
     let technicalScore = 0;
     let signalType: 'buy' | 'sell' | 'hold' = 'hold';
+    
+    // XRP behaves differently from other crypto - more institutional patterns
+    const xrpVolatilityFactor = this.calculateVolatility(prices) * 1.2;
     let aiReasons: string[] = [];
     
-    // RSI Analysis
-    if (rsi < 30) {
-      technicalScore += 25;
-      aiReasons.push(`RSI oversold at ${rsi.toFixed(1)} - potential reversal`);
-    } else if (rsi > 70) {
-      technicalScore -= 25;
-      aiReasons.push(`RSI overbought at ${rsi.toFixed(1)} - potential correction`);
-    }
-    
-    // MACD Analysis
-    if (macd.histogram > 0 && macd.line > macd.signal) {
+    // XRP-Specific RSI Analysis (adjusted for XRP's behavior)
+    if (rsi < 25) {
+      technicalScore += 30;
+      signalType = 'buy';
+      aiReasons.push(`🚨 XRP severely oversold (RSI: ${rsi.toFixed(1)}) - XRP Army accumulation zone!`);
+    } else if (rsi < 35) {
       technicalScore += 20;
-      aiReasons.push('MACD showing bullish momentum');
-    } else if (macd.histogram < 0 && macd.line < macd.signal) {
-      technicalScore -= 20;
-      aiReasons.push('MACD showing bearish momentum');
-    }
-    
-    // Moving Average Analysis
-    if (currentPrice > sma20 && sma20 > sma50) {
-      technicalScore += 20;
-      aiReasons.push('Price above key moving averages - uptrend confirmed');
-    } else if (currentPrice < sma20 && sma20 < sma50) {
-      technicalScore -= 20;
-      aiReasons.push('Price below key moving averages - downtrend confirmed');
-    }
-    
-    // Bollinger Bands Analysis
-    if (currentPrice < bollinger.lower) {
-      technicalScore += 15;
-      aiReasons.push('Price near lower Bollinger Band - oversold condition');
-    } else if (currentPrice > bollinger.upper) {
+      aiReasons.push(`📉 XRP oversold conditions - potential moon mission loading...`);
+    } else if (rsi > 75) {
+      technicalScore -= 30;
+      signalType = 'sell';
+      aiReasons.push(`🔥 XRP overbought (RSI: ${rsi.toFixed(1)}) - profit-taking expected by whales`);
+    } else if (rsi > 65) {
       technicalScore -= 15;
-      aiReasons.push('Price near upper Bollinger Band - overbought condition');
+      aiReasons.push(`⚠️ XRP approaching overbought - watch for whale resistance`);
     }
     
-    // Support/Resistance Analysis
-    const nearSupport = support.some(s => Math.abs(currentPrice - s) / currentPrice < 0.02);
-    const nearResistance = resistance.some(r => Math.abs(currentPrice - r) / currentPrice < 0.02);
+    // XRP-Focused MACD Analysis
+    if (macd.histogram > 0.001 && macd.line > macd.signal) {
+      technicalScore += 25;
+      aiReasons.push('🚀 XRP MACD bullish crossover - momentum building for XRP Army rally');
+    } else if (macd.histogram < -0.001 && macd.line < macd.signal) {
+      technicalScore -= 25;
+      aiReasons.push('📊 XRP MACD bearish divergence - institutional selling pressure');
+    }
+    
+    // XRP Institutional Moving Average Analysis
+    const priceAboveSMA20 = currentPrice > sma20;
+    const sma20AboveSMA50 = sma20 > sma50;
+    
+    if (priceAboveSMA20 && sma20AboveSMA50) {
+      technicalScore += 30;
+      aiReasons.push('🏛️ XRP in bullish alignment - institutional flow positive, XRP Army strong');
+    } else if (!priceAboveSMA20 && !sma20AboveSMA50) {
+      technicalScore -= 30;
+      aiReasons.push('📉 XRP below key averages - bearish institutional sentiment');
+    } else if (priceAboveSMA20) {
+      technicalScore += 15;
+      aiReasons.push('💪 XRP holding above 20-MA - short-term XRP Army strength');
+    }
+    
+    // XRP-Specific Bollinger Bands (tighter thresholds for XRP volatility)
+    if (currentPrice <= bollinger.lower * 1.005) {
+      technicalScore += 20;
+      aiReasons.push('🎯 XRP at lower Bollinger Band - historically strong XRP Army bounce zone');
+    } else if (currentPrice >= bollinger.upper * 0.995) {
+      technicalScore -= 20;
+      aiReasons.push('🛑 XRP at upper Bollinger Band - whale profit-taking resistance');
+    }
+    
+    // XRP Key Psychological Levels
+    const xrpKeyLevels = [1.50, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00];
+    const nearKeyLevel = xrpKeyLevels.find(level => Math.abs(currentPrice - level) / currentPrice < 0.03);
+    
+    if (nearKeyLevel) {
+      if (currentPrice > nearKeyLevel * 0.98) {
+        technicalScore -= 15;
+        aiReasons.push(`🎯 XRP approaching major resistance at $${nearKeyLevel.toFixed(2)} - whale selling wall expected`);
+      } else if (currentPrice < nearKeyLevel * 1.02) {
+        technicalScore += 15;
+        aiReasons.push(`💎 XRP near key support at $${nearKeyLevel.toFixed(2)} - strong hands accumulating`);
+      }
+    }
+    
+    // Dynamic Support/Resistance
+    const nearSupport = support.some(s => Math.abs(currentPrice - s) / currentPrice < 0.015);
+    const nearResistance = resistance.some(r => Math.abs(currentPrice - r) / currentPrice < 0.015);
     
     if (nearSupport) {
-      technicalScore += 10;
-      aiReasons.push('Price approaching key support level');
+      technicalScore += 18;
+      aiReasons.push('💪 XRP testing dynamic support - XRP Army holding strong');
     }
     if (nearResistance) {
-      technicalScore -= 10;
-      aiReasons.push('Price approaching key resistance level');
+      technicalScore -= 18;
+      aiReasons.push('🛑 XRP facing dynamic resistance - institutional profit-taking detected');
     }
     
-    // Volume Analysis
+    // XRP Volume Analysis (institutional vs retail flow)
     const avgVolume = volumes.slice(-20).reduce((a, b) => a + b, 0) / 20;
     const currentVolume = volumes[volumes.length - 1];
-    if (currentVolume > avgVolume * 1.5) {
-      technicalScore += 10;
-      aiReasons.push('High volume confirms price movement');
+    
+    if (currentVolume > avgVolume * 2) {
+      technicalScore += 15;
+      aiReasons.push('🐋 Massive XRP volume spike - whales are moving, XRP Army pay attention!');
+    } else if (currentVolume > avgVolume * 1.5) {
+      technicalScore += 8;
+      aiReasons.push('📈 High XRP volume confirms price movement - institutional activity detected');
+    } else if (currentVolume < avgVolume * 0.7) {
+      technicalScore -= 5;
+      aiReasons.push('😴 Low XRP volume - market waiting for catalyst');
     }
     
-    // Determine signal type and strength
-    if (technicalScore > 40) {
+    // XRP-Specific Signal Determination with XRP Army messaging
+    if (technicalScore > 25) {
       signalType = 'buy';
-    } else if (technicalScore < -40) {
+      if (technicalScore > 70) {
+        aiReasons.push('🚀 MEGA BULLISH: All systems GO for XRP moon mission! XRP Army unite!');
+      } else if (technicalScore > 50) {
+        aiReasons.push('🚀 STRONG BUY: XRP showing massive strength, XRP Army accumulating!');
+      } else {
+        aiReasons.push('📈 BUY SIGNAL: XRP technical setup favorable, XRP Army holding strong');
+      }
+    } else if (technicalScore < -25) {
       signalType = 'sell';
+      if (technicalScore < -70) {
+        aiReasons.push('🛑 MEGA BEARISH: XRP facing serious headwinds, XRP Army be very cautious!');
+      } else if (technicalScore < -50) {
+        aiReasons.push('🛑 STRONG SELL: XRP under heavy pressure, consider profit-taking');
+      } else {
+        aiReasons.push('📉 SELL SIGNAL: XRP showing weakness, XRP Army reduce exposure');
+      }
+    } else {
+      signalType = 'hold';
+      aiReasons.push('🏛️ HOLD: XRP consolidating, XRP Army stay patient for next move');
     }
     
-    const strength = Math.abs(technicalScore) > 60 ? 'very_strong' :
-                    Math.abs(technicalScore) > 40 ? 'strong' :
-                    Math.abs(technicalScore) > 20 ? 'medium' : 'weak';
+    const strength = Math.abs(technicalScore) > 70 ? 'very_strong' :
+                    Math.abs(technicalScore) > 50 ? 'strong' :
+                    Math.abs(technicalScore) > 30 ? 'medium' : 'weak';
     
     // AI Confidence (simulated sophisticated ML model)
     const confidence = Math.min(95, Math.max(45, 50 + Math.abs(technicalScore) * 0.8 + Math.random() * 10));
@@ -238,6 +293,7 @@ export class AISignalGenerator {
       aiScore: Math.round(technicalScore + Math.random() * 20 - 10),
       aiReasons,
       marketSentiment: technicalScore > 20 ? 'bullish' : technicalScore < -20 ? 'bearish' : 'neutral',
+      xrpArmySentiment: this.getXRPArmySentiment(technicalScore, signalType),
       
       predictions: {
         shortTerm: { 
@@ -272,6 +328,25 @@ export class AISignalGenerator {
     }
     
     return signal;
+  }
+  
+  // XRP Army Sentiment Analysis
+  static getXRPArmySentiment(technicalScore: number, signalType: 'buy' | 'sell' | 'hold'): string {
+    if (technicalScore > 70) {
+      return '🚀🚀🚀 XRP ARMY MEGA BULLISH - MOON MISSION CONFIRMED! 🚀🚀🚀';
+    } else if (technicalScore > 50) {
+      return '🚀 XRP Army very bullish - diamond hands accumulating! 💎';
+    } else if (technicalScore > 25) {
+      return '📈 XRP Army bullish - hodlers stay strong! 💪';
+    } else if (technicalScore < -70) {
+      return '😱 XRP Army major concern - whales dumping hard! 🐋';
+    } else if (technicalScore < -50) {
+      return '⚠️ XRP Army bearish - weak hands being shaken out';
+    } else if (technicalScore < -25) {
+      return '📉 XRP Army cautious - waiting for better entry';
+    } else {
+      return '🏛️ XRP Army neutral - patience is key, hodl mode activated';
+    }
   }
   
   static calculateVolatility(prices: number[]): number {
@@ -346,17 +421,18 @@ export class AISignalGenerator {
   }
   
   // Auto-generate signals for all symbols
+  // XRP-Only Signal Generation
   static generateSignalsForMarket(marketData: { [symbol: string]: any[] }): void {
-    Object.keys(marketData).forEach(symbol => {
-      if (marketData[symbol].length > 50) {
-        // Generate signal every 30 minutes to 2 hours
-        const lastSignal = this.signals.find(s => s.symbol === symbol);
-        const timeSinceLastSignal = lastSignal ? Date.now() - lastSignal.timestamp : Infinity;
-        
-        if (timeSinceLastSignal > (30 * 60 * 1000) + Math.random() * (90 * 60 * 1000)) {
-          this.generateSignal(symbol, marketData[symbol]);
-        }
+    // Focus exclusively on XRP - the only symbol that matters to XRP Army!
+    if (marketData['XRPUSD'] && marketData['XRPUSD'].length > 50) {
+      const lastSignal = this.signals.find(s => s.symbol === 'XRPUSD');
+      const timeSinceLastSignal = lastSignal ? Date.now() - lastSignal.timestamp : Infinity;
+      
+      // Generate XRP signals every 15-60 minutes for more frequent analysis
+      if (timeSinceLastSignal > (15 * 60 * 1000) + Math.random() * (45 * 60 * 1000)) {
+        console.log('🤖 Generating new XRP Army AI signal...');
+        this.generateSignal('XRPUSD', marketData['XRPUSD']);
       }
-    });
+    }
   }
 }
