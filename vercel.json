@@ -1,0 +1,14 @@
+{
+  "name": "xrp-army",
+  "version": 2,
+  "buildCommand": "cd crypto-charts && npm install && npm run build",
+  "outputDirectory": "crypto-charts/build",
+  "installCommand": "cd crypto-charts && npm install",
+  "framework": "create-react-app",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
