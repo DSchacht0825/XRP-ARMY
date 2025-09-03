@@ -88,7 +88,10 @@ const App: React.FC = () => {
   // WebSocket connection
   useEffect(() => {
     if (!isAuthenticated) return;
-    const newSocket = io('http://localhost:5001', {
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://xrp-army-production.up.railway.app'
+      : 'http://localhost:5001';
+    const newSocket = io(socketUrl, {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,

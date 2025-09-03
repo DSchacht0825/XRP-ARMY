@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://xrp-army-production.up.railway.app/api'
+  : 'http://localhost:5001/api';
 
 export interface ApiResponse<T> {
   success: boolean;
