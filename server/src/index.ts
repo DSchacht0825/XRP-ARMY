@@ -11,7 +11,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3010"],
+    origin: [
+      "http://localhost:3000", 
+      "http://localhost:3001", 
+      "http://localhost:3010",
+      "https://xrp-army.vercel.app"
+    ],
     methods: ["GET", "POST"]
   }
 });
@@ -377,7 +382,29 @@ io.on('connection', (socket) => {
 
   socket.on('subscribe', (symbol: string, period: string = 'ALL') => {
     console.log(`Client subscribed to ${symbol} with period ${period}`);
-    const data = generateHistoricalData(symbol, period);
+    
+    // Use existing historical data or generate if doesn't exist
+    let data = historicalData[symbol] || [];
+    if (data.length === 0) {
+      data = generateHistoricalData(symbol, period);
+      historicalData[symbol] = data;
+    }
+    
+    // Filter data based on period if needed
+    if (period !== 'ALL' && data.length > 0) {
+      const now = Date.now() / 1000;
+      let cutoffTime: number;
+      
+      switch (period) {
+        case '1M': cutoffTime = now - (30 * 24 * 60 * 60); break;
+        case '6M': cutoffTime = now - (180 * 24 * 60 * 60); break; 
+        case '1Y': cutoffTime = now - (365 * 24 * 60 * 60); break;
+        default: cutoffTime = 0; break;
+      }
+      
+      data = data.filter(candle => candle.time >= cutoffTime);
+    }
+    
     socket.emit('historicalData', {
       symbol,
       data: data

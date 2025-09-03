@@ -81,9 +81,9 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
         borderVisible: true,
         rightOffset: 12,
         barSpacing: 6,
-        fixLeftEdge: true,
-        lockVisibleTimeRangeOnResize: true,
-        rightBarStaysOnScroll: true,
+        fixLeftEdge: false,
+        lockVisibleTimeRangeOnResize: false,
+        rightBarStaysOnScroll: false,
         visible: true,
         tickMarkFormatter: (time: any) => {
           const date = new Date(time * 1000);
@@ -269,7 +269,20 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
       }
       
       candlestickSeriesRef.current.setData(formattedData);
-      chartRef.current?.timeScale().fitContent();
+      
+      // Position chart to show most recent data (rightmost)
+      if (chartRef.current && formattedData.length > 0) {
+        const timeScale = chartRef.current.timeScale();
+        // Show the most recent ~50 bars
+        const visibleBars = Math.min(50, formattedData.length);
+        const lastIndex = formattedData.length - 1;
+        const startIndex = Math.max(0, lastIndex - visibleBars + 1);
+        
+        timeScale.setVisibleRange({
+          from: formattedData[startIndex].time,
+          to: formattedData[lastIndex].time
+        });
+      }
     }
   }, [data, chartType]);
 
