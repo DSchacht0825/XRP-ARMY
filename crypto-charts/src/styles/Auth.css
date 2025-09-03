@@ -3,11 +3,12 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #0a0f1b 0%, #1a1f2e 50%, #0a0f1b 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 20px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .auth-container::before {

@@ -14,7 +14,8 @@ body {
   background: rgb(15, 18, 25);
   background: linear-gradient(135deg, rgb(15, 18, 25) 0%, rgb(25, 30, 40) 50%, rgb(18, 22, 30) 100%);
   color: #ffffff;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
 }
 
@@ -35,7 +36,7 @@ body::before {
 
 .App {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: transparent;
