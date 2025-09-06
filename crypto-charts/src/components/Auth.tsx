@@ -8,7 +8,7 @@ interface AuthProps {
 }
 
 const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'plan'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'plan'>('plan');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -223,6 +223,12 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   };
 
   const handlePlanSelection = async () => {
+    // If user hasn't filled out signup info yet, go to signup mode
+    if (!username || !email || !password) {
+      setMode('signup');
+      return;
+    }
+
     // For paid plans, show payment modal
     if (selectedPlan !== 'free') {
       setShowPaymentModal(true);
@@ -392,6 +398,16 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
               >
                 Join the XRP Army →
               </button>
+              <button
+                type="button"
+                className="auth-button ghost"
+                onClick={() => {
+                  setMode('plan');
+                  setErrors([]);
+                }}
+              >
+                ← Back to Plans
+              </button>
             </form>
 
             <div className="auth-footer">
@@ -477,6 +493,16 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
                 }}
               >
                 Sign In →
+              </button>
+              <button
+                type="button"
+                className="auth-button ghost"
+                onClick={() => {
+                  setMode('plan');
+                  setErrors([]);
+                }}
+              >
+                ← Back to Plans
               </button>
             </form>
 
