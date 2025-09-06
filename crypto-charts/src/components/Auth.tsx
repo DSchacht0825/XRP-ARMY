@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import io, { Socket } from 'socket.io-client';
+import PaymentModal from './PaymentModal';
 import '../styles/Auth.css';
 
 interface AuthProps {
@@ -15,6 +16,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium' | 'elite'>('free');
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   // Live XRP Preview Data
   const [livePrice, setLivePrice] = useState<number>(0.5234);
@@ -46,7 +48,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     {
       id: 'premium',
       name: 'XRP Lieutenant',
-      price: '$29',
+      price: '$20',
       period: '/month',
       features: [
         '✅ Everything in Soldier',
@@ -65,7 +67,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     {
       id: 'elite',
       name: 'XRP General',
-      price: '$99',
+      price: '$49',
       period: '/month',
       features: [
         '✅ Everything in Lieutenant',
@@ -209,6 +211,13 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   };
 
   const handlePlanSelection = async () => {
+    // For paid plans, show payment modal
+    if (selectedPlan !== 'free') {
+      setShowPaymentModal(true);
+      return;
+    }
+    
+    // For free plan, proceed with signup
     setLoading(true);
     
     try {
@@ -218,12 +227,6 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       
       if (response.success && response.data) {
         console.log('✅ Signup successful:', response.message);
-        
-        // If premium plan, show success message
-        if (selectedPlan !== 'free') {
-          alert(`🚀 Welcome to XRP ${selectedPlan === 'premium' ? 'Lieutenant' : 'General'}! Your 7-day free trial has started!`);
-        }
-        
         onAuthSuccess(response.data.user);
       } else {
         setErrors([response.error || 'Signup failed']);
@@ -233,6 +236,30 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       setErrors(['Network error. Please try again.']);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    // After successful payment, complete the signup
+    setLoading(true);
+    
+    try {
+      const ApiService = (await import('../services/api')).default;
+      const response = await ApiService.signup(username, email, password, selectedPlan);
+      
+      if (response.success && response.data) {
+        console.log('✅ Signup with payment successful');
+        alert(`🚀 Welcome to XRP ${selectedPlan === 'premium' ? 'Lieutenant' : 'General'}!`);
+        onAuthSuccess(response.data.user);
+      } else {
+        setErrors([response.error || 'Signup failed']);
+      }
+    } catch (error: any) {
+      console.error('❌ Signup error:', error);
+      setErrors(['Network error. Please try again.']);
+    } finally {
+      setLoading(false);
+      setShowPaymentModal(false);
     }
   };
 
@@ -450,7 +477,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         {mode === 'plan' && (
           <div className="plan-selection">
             <h2>Choose Your XRP Army Rank</h2>
-            <p className="plan-subtitle">Start with a 7-day free trial on any paid plan</p>
+            <p className="plan-subtitle">Choose your plan to get started</p>
             
             <div className="plans-grid">
               {plans.map((plan) => (
@@ -504,7 +531,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
                   <span className="loading-spinner">⌛</span>
                 ) : (
                   <>
-                    {selectedPlan === 'free' ? 'Start Free Forever' : 'Start 7-Day Free Trial'}
+                    {selectedPlan === 'free' ? 'Start Free Forever' : 'Continue to Payment'}
                     <span className="button-arrow">→</span>
                   </>
                 )}
@@ -541,6 +568,15 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
           </div>
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        planId={selectedPlan as 'premium' | 'elite'}
+        userEmail={email}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };
