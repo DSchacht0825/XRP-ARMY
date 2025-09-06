@@ -84,6 +84,16 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     }
   ];
 
+  // Check for signup plan from button clicks
+  useEffect(() => {
+    const signupPlan = localStorage.getItem('xrp_signup_plan');
+    if (signupPlan) {
+      setMode('signup');
+      setSelectedPlan(signupPlan as 'free' | 'premium' | 'elite');
+      localStorage.removeItem('xrp_signup_plan'); // Clear the flag
+    }
+  }, []);
+
   // WebSocket connection for live XRP preview
   useEffect(() => {
     const newSocket = io('http://localhost:5001', {

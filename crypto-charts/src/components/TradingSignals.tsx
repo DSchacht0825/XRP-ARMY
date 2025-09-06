@@ -236,6 +236,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                   <button className="upgrade-btn" onClick={() => {
                     localStorage.removeItem('xrp_auth_token');
                     localStorage.removeItem('xrp_user');
+                    localStorage.setItem('xrp_signup_plan', 'premium');
                     window.location.reload();
                   }}>Get Lieutenant Access</button>
                 </div>
@@ -246,6 +247,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                   <button className="upgrade-btn primary" onClick={() => {
                     localStorage.removeItem('xrp_auth_token');
                     localStorage.removeItem('xrp_user');
+                    localStorage.setItem('xrp_signup_plan', 'elite');
                     window.location.reload();
                   }}>Get General Access</button>
                 </div>
@@ -260,6 +262,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                   onClick={() => {
                     localStorage.removeItem('xrp_auth_token');
                     localStorage.removeItem('xrp_user');
+                    localStorage.setItem('xrp_signup_plan', 'premium');
                     window.location.reload();
                   }}
                 >
