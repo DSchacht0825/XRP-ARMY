@@ -87,7 +87,9 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   // Check for signup plan from button clicks
   useEffect(() => {
     const signupPlan = localStorage.getItem('xrp_signup_plan');
+    console.log('🔍 Checking for signup plan flag:', signupPlan);
     if (signupPlan) {
+      console.log('✅ Found signup plan, switching to signup mode with plan:', signupPlan);
       setMode('signup');
       setSelectedPlan(signupPlan as 'free' | 'premium' | 'elite');
       localStorage.removeItem('xrp_signup_plan'); // Clear the flag

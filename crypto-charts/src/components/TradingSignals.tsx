@@ -234,9 +234,11 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                   <h4>XRP Lieutenant</h4>
                   <div className="price">$20<span>/month</span></div>
                   <button className="upgrade-btn" onClick={() => {
+                    console.log('🚀 Lieutenant signup button clicked');
                     localStorage.removeItem('xrp_auth_token');
                     localStorage.removeItem('xrp_user');
                     localStorage.setItem('xrp_signup_plan', 'premium');
+                    console.log('🔄 Reloading page...');
                     window.location.reload();
                   }}>Get Lieutenant Access</button>
                 </div>
