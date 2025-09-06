@@ -28,7 +28,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!document.querySelector('#square-web-sdk')) {
       const script = document.createElement('script');
       script.id = 'square-web-sdk';
-      script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
+      script.src = 'https://web.squarecdn.com/v1/square.js';
       script.async = true;
       document.body.appendChild(script);
     }

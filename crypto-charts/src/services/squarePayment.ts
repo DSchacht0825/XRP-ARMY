@@ -1,13 +1,13 @@
 import { Client, Environment } from 'square';
 
-// Square configuration - using sandbox credentials
+// Square configuration - using production credentials
 const squareClient = new Client({
-  accessToken: 'EAAAl_oXzR81OR_ZfD5uCNxsvsv31WUosBDhDLA4yDTW3kyFwFeMopPucFtgYitJ',
-  environment: Environment.Sandbox
+  accessToken: process.env.REACT_APP_SQUARE_ACCESS_TOKEN || 'EAAAl9z0g1huFmNMztub7cilS1cp_ea009v31G8VB7slx3MnIuGtAFIuP_ZiRNTT',
+  environment: Environment.Production
 });
 
-const APPLICATION_ID = 'sandbox-sq0idb-_3kTGKyO0GN2YAFIc3tNgQ';
-const LOCATION_ID = 'REPLACE_WITH_YOUR_LOCATION_ID'; // You'll need to get this from Square Dashboard
+const APPLICATION_ID = 'sq0idp-hxoTovuE7sR4gVhwgABuOw';
+const LOCATION_ID = 'LS3VWY69ZXS1V'; // Causory (Main) - 724 Granada Dr
 
 export interface PaymentDetails {
   amount: number; // in cents
