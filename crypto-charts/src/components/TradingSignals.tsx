@@ -233,13 +233,21 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                 <div className="plan-option">
                   <h4>XRP Lieutenant</h4>
                   <div className="price">$20<span>/month</span></div>
-                  <button className="upgrade-btn" onClick={() => window.location.href = '/#signup'}>Get Lieutenant Access</button>
+                  <button className="upgrade-btn" onClick={() => {
+                    localStorage.removeItem('xrp_auth_token');
+                    localStorage.removeItem('xrp_user');
+                    window.location.reload();
+                  }}>Get Lieutenant Access</button>
                 </div>
                 <div className="plan-option popular">
                   <div className="popular-badge">RECOMMENDED</div>
                   <h4>XRP General</h4>
                   <div className="price">$49<span>/month</span></div>
-                  <button className="upgrade-btn primary" onClick={() => window.location.href = '/#signup'}>Get General Access</button>
+                  <button className="upgrade-btn primary" onClick={() => {
+                    localStorage.removeItem('xrp_auth_token');
+                    localStorage.removeItem('xrp_user');
+                    window.location.reload();
+                  }}>Get General Access</button>
                 </div>
               </div>
             </div>
@@ -249,7 +257,11 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               <div className="cta-buttons">
                 <button 
                   className="demo-btn primary"
-                  onClick={() => window.location.href = '/#signup'}
+                  onClick={() => {
+                    localStorage.removeItem('xrp_auth_token');
+                    localStorage.removeItem('xrp_user');
+                    window.location.reload();
+                  }}
                 >
                   📝 Sign Up Now
                 </button>
