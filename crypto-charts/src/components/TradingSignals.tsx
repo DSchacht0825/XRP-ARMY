@@ -27,6 +27,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   console.log('🔍 TradingSignals rendered with user:', user);
   console.log('🔍 User plan:', userPlan);
   console.log('🔍 Is premium:', isPremium);
+  console.log('🔍 handleUpgradeClick function exists:', typeof handleUpgradeClick);
 
   useEffect(() => {
     // Generate initial signals
@@ -284,7 +285,10 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                 <div className="plan-option">
                   <h4>XRP Lieutenant</h4>
                   <div className="price">$20<span>/month</span></div>
-                  <button className="upgrade-btn" onClick={() => handleUpgradeClick('premium')}>
+                  <button className="upgrade-btn" onClick={() => {
+                    console.log('🔥 DIRECT BUTTON TEST - this should appear in console!');
+                    handleUpgradeClick('premium');
+                  }}>
                     {user ? 'Upgrade to Lieutenant' : 'Get Lieutenant Access'}
                   </button>
                 </div>
@@ -292,7 +296,10 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                   <div className="popular-badge">RECOMMENDED</div>
                   <h4>XRP General</h4>
                   <div className="price">$49<span>/month</span></div>
-                  <button className="upgrade-btn primary" onClick={() => handleUpgradeClick('elite')}>
+                  <button className="upgrade-btn primary" onClick={() => {
+                    console.log('🔥 GENERAL BUTTON TEST - this should appear in console!');
+                    handleUpgradeClick('elite');
+                  }}>
                     {user ? 'Upgrade to General' : 'Get General Access'}
                   </button>
                 </div>
