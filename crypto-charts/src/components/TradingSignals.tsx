@@ -27,7 +27,6 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   console.log('🔍 TradingSignals rendered with user:', user);
   console.log('🔍 User plan:', userPlan);
   console.log('🔍 Is premium:', isPremium);
-  console.log('🔍 handleUpgradeClick function exists:', typeof handleUpgradeClick);
 
   useEffect(() => {
     // Generate initial signals
