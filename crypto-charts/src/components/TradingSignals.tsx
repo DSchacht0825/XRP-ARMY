@@ -23,6 +23,11 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'premium' | 'elite'>('premium');
 
+  // Debug logging
+  console.log('🔍 TradingSignals rendered with user:', user);
+  console.log('🔍 User plan:', userPlan);
+  console.log('🔍 Is premium:', isPremium);
+
   useEffect(() => {
     // Generate initial signals
     if (Object.keys(marketData).length > 0) {
@@ -51,10 +56,14 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
 
   // Handle upgrade button clicks for authenticated users
   const handleUpgradeClick = (planId: 'premium' | 'elite') => {
+    console.log('🔥 Button clicked! Plan:', planId, 'User:', user);
+    
     if (user) {
       // User is authenticated - show upgrade modal
       console.log('🚀 Authenticated user upgrade click for plan:', planId);
+      console.log('🔍 Setting selectedUpgradePlan to:', planId);
       setSelectedUpgradePlan(planId);
+      console.log('🔍 Setting showUpgradeModal to true');
       setShowUpgradeModal(true);
     } else {
       // User not authenticated - show signup flow
@@ -544,10 +553,14 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
       </div>
       
       {/* Upgrade Payment Modal for authenticated users */}
+      {console.log('🔍 Rendering modal. showUpgradeModal:', showUpgradeModal, 'user:', user)}
       {user && (
         <PaymentModal
           isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
+          onClose={() => {
+            console.log('🔍 Modal close clicked');
+            setShowUpgradeModal(false);
+          }}
           planId={selectedUpgradePlan}
           userEmail={user.email || user.username}
           userName={user.username}
