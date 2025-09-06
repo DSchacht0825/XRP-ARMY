@@ -79,9 +79,14 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
         // Redirect directly to Square checkout
         window.location.href = paymentUrl;
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Payment link creation failed:', error);
-        alert('Payment processing failed. Please try again.');
+        console.error('❌ Error details:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        if (error.response) {
+          console.error('❌ API Response:', error.response);
+        }
+        alert(`Payment processing failed: ${error.message || 'Unknown error'}. Please try again.`);
       }
     } else {
       // User not authenticated - show signup flow

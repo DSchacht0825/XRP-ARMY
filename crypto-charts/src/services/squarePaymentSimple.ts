@@ -26,6 +26,12 @@ class SimpleSquarePaymentService {
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
+    console.log('💳 Square Payment Link Request:');
+    console.log('- Plan:', planId, plan);
+    console.log('- User Email:', userEmail);
+    console.log('- Location ID:', LOCATION_ID);
+    console.log('- Access Token (first 10 chars):', SQUARE_ACCESS_TOKEN.substring(0, 10) + '...');
+    
     try {
       const response = await fetch(`${API_BASE_URL}/online-checkout/payment-links`, {
         method: 'POST',
@@ -68,8 +74,19 @@ class SimpleSquarePaymentService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create payment link');
+        const errorText = await response.text();
+        console.error('❌ Square API Error Response:', response.status, response.statusText);
+        console.error('❌ Square API Error Body:', errorText);
+        
+        let errorMessage = 'Failed to create payment link';
+        try {
+          const error = JSON.parse(errorText);
+          errorMessage = error.message || error.errors?.[0]?.detail || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(`Square API Error (${response.status}): ${errorMessage}`);
       }
 
       const data = await response.json();
@@ -80,7 +97,12 @@ class SimpleSquarePaymentService {
       
       throw new Error('Payment link URL not found in response');
     } catch (error) {
-      console.error('Square payment link error:', error);
+      console.error('❌ Square payment link error:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to Square API. This may be due to CORS restrictions or network issues.');
+      }
+      
       throw error;
     }
   }
