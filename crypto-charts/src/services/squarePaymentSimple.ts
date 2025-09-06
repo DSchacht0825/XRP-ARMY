@@ -1,10 +1,5 @@
-// Simplified Square payment service using payment links only
-// This avoids browser compatibility issues with the Square Node SDK
-
-const SQUARE_ACCESS_TOKEN = process.env.REACT_APP_SQUARE_ACCESS_TOKEN || 'EAAAl9z0g1huFmNMztub7cilS1cp_ea009v31G8VB7slx3MnIuGtAFIuP_ZiRNTT';
-const APPLICATION_ID = 'sq0idp-hxoTovuE7sR4gVhwgABuOw';
-const LOCATION_ID = 'LS3VWY69ZXS1V';
-const API_BASE_URL = 'https://connect.squareup.com/v2';
+// Square payment service using backend API proxy
+// This avoids CORS issues by using the backend server to handle Square API calls
 
 export const SUBSCRIPTION_PLANS = {
   premium: {
@@ -22,80 +17,54 @@ export const SUBSCRIPTION_PLANS = {
 };
 
 class SimpleSquarePaymentService {
-  // Create a payment link using Square API directly
+  // Create a payment link using backend API
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
-    console.log('💳 Square Payment Link Request:');
+    console.log('💳 Square Payment Link Request via Backend:');
     console.log('- Plan:', planId, plan);
     console.log('- User Email:', userEmail);
-    console.log('- Location ID:', LOCATION_ID);
-    console.log('- Access Token (first 10 chars):', SQUARE_ACCESS_TOKEN.substring(0, 10) + '...');
+    
+    // Get auth token from localStorage
+    const authToken = localStorage.getItem('xrp_auth_token');
+    if (!authToken) {
+      throw new Error('Authentication required. Please log in again.');
+    }
+
+    // Determine backend URL
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://xrp-army-production.up.railway.app'
+      : 'http://localhost:5001';
     
     try {
-      const response = await fetch(`${API_BASE_URL}/online-checkout/payment-links`, {
+      const response = await fetch(`${backendUrl}/api/payment/create-payment-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SQUARE_ACCESS_TOKEN}`,
-          'Square-Version': '2023-10-18'
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
-          order: {
-            location_id: LOCATION_ID,
-            line_items: [
-              {
-                name: `${plan.name} - First Month`,
-                quantity: '1',
-                base_price_money: {
-                  amount: plan.amount,
-                  currency: 'USD'
-                },
-                note: `First month payment - ${plan.name} subscription`
-              }
-            ]
-          },
-          checkout_options: {
-            redirect_url: `${window.location.origin}/payment/success?plan=${planId}&email=${encodeURIComponent(userEmail)}`,
-            ask_for_shipping_address: false,
-            merchant_support_email: 'support@xrparmy.com',
-            accepted_payment_methods: {
-              apple_pay: true,
-              google_pay: true,
-              cash_app_pay: true,
-              afterpay_clearpay: false
-            }
-          },
-          pre_populated_data: {
-            buyer_email: userEmail
-          },
-          description: `Start your ${plan.name} subscription - $${(plan.amount / 100).toFixed(2)}/month`
+          planId,
+          userEmail
         })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Square API Error Response:', response.status, response.statusText);
-        console.error('❌ Square API Error Body:', errorText);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Backend API Error:', response.status, response.statusText);
+        console.error('❌ Backend API Error Body:', errorData);
         
-        let errorMessage = 'Failed to create payment link';
-        try {
-          const error = JSON.parse(errorText);
-          errorMessage = error.message || error.errors?.[0]?.detail || errorMessage;
-        } catch (e) {
-          errorMessage = errorText || errorMessage;
-        }
-        
-        throw new Error(`Square API Error (${response.status}): ${errorMessage}`);
+        throw new Error(`Backend API Error (${response.status}): ${errorData.error || 'Unknown error'}`);
       }
 
       const data = await response.json();
       
-      if (data.payment_link && data.payment_link.url) {
-        return data.payment_link.url;
+      if (data.success && data.payment_url) {
+        console.log('✅ Payment link created successfully via backend');
+        return data.payment_url;
       }
       
-      throw new Error('Payment link URL not found in response');
+      throw new Error('Payment link URL not found in backend response');
     } catch (error) {
       console.error('❌ Square payment link error:', error);
       
@@ -107,14 +76,22 @@ class SimpleSquarePaymentService {
     }
   }
 
-  // Get payment details (for webhooks or verification)
+  // Get payment details via backend
   async getPayment(paymentId: string): Promise<any> {
+    const authToken = localStorage.getItem('xrp_auth_token');
+    if (!authToken) {
+      throw new Error('Authentication required. Please log in again.');
+    }
+
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://xrp-army-production.up.railway.app'
+      : 'http://localhost:5001';
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}`, {
+      const response = await fetch(`${backendUrl}/api/payment/payment/${paymentId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${SQUARE_ACCESS_TOKEN}`,
-          'Square-Version': '2023-10-18'
+          'Authorization': `Bearer ${authToken}`
         }
       });
 
@@ -123,46 +100,17 @@ class SimpleSquarePaymentService {
       }
 
       const data = await response.json();
-      return data.payment;
+      return data;
     } catch (error) {
-      console.error('Square get payment error:', error);
+      console.error('Backend get payment error:', error);
       throw error;
     }
   }
 
-  // Create customer (for future billing)
+  // Create customer (for future billing) - TODO: Implement via backend if needed
   async createCustomer(email: string, firstName?: string, lastName?: string): Promise<string> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/customers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SQUARE_ACCESS_TOKEN}`,
-          'Square-Version': '2023-10-18'
-        },
-        body: JSON.stringify({
-          email_address: email,
-          given_name: firstName || '',
-          family_name: lastName || ''
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create customer');
-      }
-
-      const data = await response.json();
-      
-      if (data.customer && data.customer.id) {
-        return data.customer.id;
-      }
-      
-      throw new Error('Customer ID not found in response');
-    } catch (error) {
-      console.error('Square customer creation error:', error);
-      throw error;
-    }
+    // This would need to be implemented via backend API when needed
+    throw new Error('Customer creation not yet implemented via backend API');
   }
 }
 

@@ -4,6 +4,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import WebSocket from 'ws';
 import authRoutes from './routes/auth';
+import paymentRoutes from './routes/payment';
 import { database } from './database';
 // import { ExchangeManager } from './exchangeManager';
 
@@ -26,6 +27,9 @@ app.use(express.json());
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+
+// Payment routes
+app.use('/api/payment', paymentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
