@@ -41,8 +41,8 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
 };
 
 class SquarePaymentService {
-  // Create a subscription with customer and card
-  async createSubscriptionWithCard(planId: 'premium' | 'elite', userEmail: string, cardToken: string, userName?: string): Promise<any> {
+  // Create a one-time payment (simpler than subscriptions)
+  async processOneTimePayment(planId: 'premium' | 'elite', userEmail: string, cardToken: string, userName?: string): Promise<any> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
     try {
@@ -84,21 +84,23 @@ class SquarePaymentService {
         throw new Error('Failed to save card');
       }
 
-      // Step 3: Create subscription plan (if not exists in Square)
-      // Note: In production, these plans should be pre-created in Square Dashboard
-      
-      // Step 4: Create subscription
-      const subscriptionResponse = await squareClient.subscriptionsApi.createSubscription({
+      // Step 3: Process first month payment
+      const paymentResponse = await squareClient.paymentsApi.createPayment({
+        sourceId: cardResponse.result.card.id,
+        amountMoney: {
+          amount: BigInt(plan.amount),
+          currency: 'USD'
+        },
         locationId: LOCATION_ID,
-        planVariationId: plan.id, // This should be the actual plan variation ID from Square
-        customerId: customerId,
-        cardId: cardResponse.result.card.id,
-        startDate: new Date().toISOString().split('T')[0]
+        buyerEmailAddress: userEmail,
+        note: `First month payment - ${plan.name} subscription`,
+        autocomplete: true
       });
 
       return {
-        subscription: subscriptionResponse.result.subscription,
-        customerId: customerId
+        payment: paymentResponse.result.payment,
+        customerId: customerId,
+        cardId: cardResponse.result.card.id
       };
     } catch (error) {
       console.error('Square subscription error:', error);
@@ -106,30 +108,28 @@ class SquarePaymentService {
     }
   }
 
-  // Create a payment link for checkout (simpler method)
+  // Create a payment link for one-time payment
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
     try {
-      // For subscriptions, we need to use Quick Pay Links or Checkout API
-      // This creates a one-time payment that can be converted to subscription
       const response = await squareClient.checkoutApi.createPaymentLink({
         order: {
           locationId: LOCATION_ID,
           lineItems: [
             {
-              name: plan.name + ' Monthly Subscription',
+              name: `${plan.name} - First Month`,
               quantity: '1',
               basePriceMoney: {
                 amount: BigInt(plan.amount),
                 currency: 'USD'
               },
-              note: `Monthly subscription - ${plan.name}`
+              note: `First month payment - ${plan.name} subscription`
             }
           ]
         },
         checkoutOptions: {
-          redirectUrl: `${window.location.origin}/payment/success?plan=${planId}`,
+          redirectUrl: `${window.location.origin}/payment/success?plan=${planId}&email=${encodeURIComponent(userEmail)}`,
           askForShippingAddress: false,
           merchantSupportEmail: 'support@xrparmy.com',
           acceptedPaymentMethods: {
@@ -142,7 +142,7 @@ class SquarePaymentService {
         prePopulatedData: {
           buyerEmail: userEmail
         },
-        description: `Start your ${plan.name} subscription today!`
+        description: `Start your ${plan.name} subscription - $${(plan.amount / 100).toFixed(2)}/month`
       });
 
       if (response.result.paymentLink) {

@@ -72,16 +72,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const result = await card.tokenize();
       
       if (result.status === 'OK') {
-        // Create subscription with customer and card
-        const subscriptionResult = await squarePaymentService.createSubscriptionWithCard(
+        // Process one-time payment for first month
+        const paymentResult = await squarePaymentService.processOneTimePayment(
           planId,
           userEmail,
           result.token,
           userName
         );
 
-        // Store customer ID for future reference
-        localStorage.setItem('square_customer_id', subscriptionResult.customerId);
+        // Store customer and card ID for future billing
+        localStorage.setItem('square_customer_id', paymentResult.customerId);
+        localStorage.setItem('square_card_id', paymentResult.cardId);
 
         // Success!
         onSuccess();
