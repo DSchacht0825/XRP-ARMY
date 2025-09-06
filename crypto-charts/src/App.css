@@ -3086,6 +3086,64 @@ body::before {
   transition: all 0.3s ease;
 }
 
+/* Disclaimer Styles */
+.disclaimer-section {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.disclaimer-section h4 {
+  color: #ffc107;
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.disclaimer-section p {
+  color: #fff;
+  font-size: 13px;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.disclaimer-card {
+  background: rgba(255, 193, 7, 0.1) !important;
+  border: 1px solid rgba(255, 193, 7, 0.3) !important;
+}
+
+.disclaimer-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.disclaimer-text {
+  color: #ffc107;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.ai-features {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.ai-features .feature {
+  background: rgba(0, 170, 228, 0.1);
+  border: 1px solid rgba(0, 170, 228, 0.3);
+  padding: 10px 15px;
+  border-radius: 8px;
+  color: #00AAE4;
+  font-size: 14px;
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+}
+
 .form-group select:focus,
 .form-group input:focus {
   outline: none;

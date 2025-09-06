@@ -168,12 +168,12 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               
               <div className="blur-overlay">
                 <div className="unlock-message">
-                  <h3>🚀 Unlock AI-Powered Signals</h3>
-                  <p>Get professional-grade trading signals powered by advanced machine learning</p>
-                  <div className="live-stats">
-                    <div className="stat">📊 <strong>73.2%</strong> Win Rate</div>
-                    <div className="stat">💰 <strong>+847%</strong> Total Return</div>
-                    <div className="stat">⚡ <strong>127</strong> Signals This Week</div>
+                  <h3>📚 Educational Trading Analysis</h3>
+                  <p>AI-powered analysis and educational trading insights for XRP market trends</p>
+                  <div className="ai-features">
+                    <div className="feature">🤖 <strong>AI-Powered</strong> Analysis</div>
+                    <div className="feature">📊 <strong>Technical</strong> Indicators</div>
+                    <div className="feature">⚡ <strong>Real-Time</strong> Signals</div>
                   </div>
                 </div>
               </div>
@@ -288,10 +288,11 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                 </button>
               </div>
               
-              <div className="trust-indicators">
-                <div className="trust-item">⭐⭐⭐⭐⭐ <strong>4.9/5</strong> (2,847 reviews)</div>
-                <div className="trust-item">👥 <strong>15,000+</strong> active traders</div>
-                <div className="trust-item">🔒 <strong>Bank-grade</strong> security</div>
+              <div className="disclaimer-section">
+                <h4>⚠️ Trading Risk Disclaimer</h4>
+                <p><strong>Not Financial Advice:</strong> All content is for educational purposes only. Consult a financial advisor before making investment decisions.</p>
+                <p><strong>Risk Warning:</strong> Trading cryptocurrencies involves substantial risk and may result in significant losses.</p>
+                <p><strong>No Guarantees:</strong> Past performance does not indicate future results. Use at your own risk.</p>
               </div>
             </div>
           </div>
@@ -326,17 +327,17 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
             <div className="stat-value">{stats.activeSignals}</div>
             <div className="stat-label">Active</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">{stats.accuracy.toFixed(1)}%</div>
-            <div className="stat-label">Accuracy</div>
+          <div className="stat-card disclaimer-card">
+            <div className="disclaimer-icon">⚠️</div>
+            <div className="disclaimer-text">Educational Only</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">{stats.winRate.toFixed(1)}%</div>
-            <div className="stat-label">Win Rate</div>
+          <div className="stat-card disclaimer-card">
+            <div className="disclaimer-icon">📈</div>
+            <div className="disclaimer-text">Past ≠ Future</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value">+{stats.averageReturn.toFixed(1)}%</div>
-            <div className="stat-label">Avg Return</div>
+          <div className="stat-card disclaimer-card">
+            <div className="disclaimer-icon">⚡</div>
+            <div className="disclaimer-text">High Risk</div>
           </div>
         </div>
       )}
