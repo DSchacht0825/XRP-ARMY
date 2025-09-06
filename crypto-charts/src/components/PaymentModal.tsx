@@ -7,6 +7,7 @@ interface PaymentModalProps {
   onClose: () => void;
   planId: 'premium' | 'elite';
   userEmail: string;
+  userName?: string;
   onSuccess: () => void;
 }
 
@@ -15,6 +16,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose, 
   planId, 
   userEmail,
+  userName,
   onSuccess 
 }) => {
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       localStorage.setItem('pending_subscription', JSON.stringify({
         planId,
         planName: plan.name,
-        userEmail
+        userEmail,
+        userName
       }));
 
       // Redirect to Square checkout
@@ -69,14 +72,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const result = await card.tokenize();
       
       if (result.status === 'OK') {
-        // Process payment
-        await squarePaymentService.processPayment(result.token, {
-          amount: plan.amount,
-          currency: 'USD',
-          buyerEmail: userEmail,
-          planName: plan.name,
-          planId
-        });
+        // Create subscription with customer and card
+        const subscriptionResult = await squarePaymentService.createSubscriptionWithCard(
+          planId,
+          userEmail,
+          result.token,
+          userName
+        );
+
+        // Store customer ID for future reference
+        localStorage.setItem('square_customer_id', subscriptionResult.customerId);
 
         // Success!
         onSuccess();

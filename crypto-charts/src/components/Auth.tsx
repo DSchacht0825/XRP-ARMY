@@ -575,6 +575,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         onClose={() => setShowPaymentModal(false)}
         planId={selectedPlan as 'premium' | 'elite'}
         userEmail={email}
+        userName={username}
         onSuccess={handlePaymentSuccess}
       />
     </div>

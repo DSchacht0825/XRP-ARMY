@@ -41,34 +41,108 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
 };
 
 class SquarePaymentService {
-  // Create a payment link for checkout
+  // Create a subscription with customer and card
+  async createSubscriptionWithCard(planId: 'premium' | 'elite', userEmail: string, cardToken: string, userName?: string): Promise<any> {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    
+    try {
+      // Step 1: Create or find customer
+      let customerId: string;
+      
+      // Try to find existing customer first
+      try {
+        const searchResponse = await squareClient.customersApi.searchCustomers({
+          filter: {
+            emailAddress: {
+              exact: userEmail
+            }
+          }
+        });
+        
+        if (searchResponse.result.customers && searchResponse.result.customers.length > 0) {
+          customerId = searchResponse.result.customers[0].id!;
+        } else {
+          // Create new customer
+          const [firstName, lastName] = userName ? userName.split(' ') : ['', ''];
+          customerId = await this.createCustomer(userEmail, firstName, lastName);
+        }
+      } catch (searchError) {
+        // If search fails, create new customer
+        const [firstName, lastName] = userName ? userName.split(' ') : ['', ''];
+        customerId = await this.createCustomer(userEmail, firstName, lastName);
+      }
+
+      // Step 2: Create card on file for customer
+      const cardResponse = await squareClient.cardsApi.createCard({
+        sourceId: cardToken,
+        card: {
+          customerId: customerId
+        }
+      });
+
+      if (!cardResponse.result.card) {
+        throw new Error('Failed to save card');
+      }
+
+      // Step 3: Create subscription plan (if not exists in Square)
+      // Note: In production, these plans should be pre-created in Square Dashboard
+      
+      // Step 4: Create subscription
+      const subscriptionResponse = await squareClient.subscriptionsApi.createSubscription({
+        locationId: LOCATION_ID,
+        planVariationId: plan.id, // This should be the actual plan variation ID from Square
+        customerId: customerId,
+        cardId: cardResponse.result.card.id,
+        startDate: new Date().toISOString().split('T')[0]
+      });
+
+      return {
+        subscription: subscriptionResponse.result.subscription,
+        customerId: customerId
+      };
+    } catch (error) {
+      console.error('Square subscription error:', error);
+      throw error;
+    }
+  }
+
+  // Create a payment link for checkout (simpler method)
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
     try {
+      // For subscriptions, we need to use Quick Pay Links or Checkout API
+      // This creates a one-time payment that can be converted to subscription
       const response = await squareClient.checkoutApi.createPaymentLink({
         order: {
           locationId: LOCATION_ID,
           lineItems: [
             {
-              name: plan.name + ' Subscription',
+              name: plan.name + ' Monthly Subscription',
               quantity: '1',
               basePriceMoney: {
                 amount: BigInt(plan.amount),
                 currency: 'USD'
-              }
+              },
+              note: `Monthly subscription - ${plan.name}`
             }
           ]
         },
         checkoutOptions: {
-          subscriptionPlanId: plan.id,
-          redirectUrl: `${window.location.origin}/payment/success`,
+          redirectUrl: `${window.location.origin}/payment/success?plan=${planId}`,
           askForShippingAddress: false,
-          merchantSupportEmail: 'support@xrparmy.com'
+          merchantSupportEmail: 'support@xrparmy.com',
+          acceptedPaymentMethods: {
+            applePay: true,
+            googlePay: true,
+            cashAppPay: true,
+            afterpayClearpay: false
+          }
         },
         prePopulatedData: {
           buyerEmail: userEmail
-        }
+        },
+        description: `Start your ${plan.name} subscription today!`
       });
 
       if (response.result.paymentLink) {
