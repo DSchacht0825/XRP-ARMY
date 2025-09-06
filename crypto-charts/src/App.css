@@ -2262,7 +2262,7 @@ body::before {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.trial-notice {
+.subscription-notice {
   margin-top: 32px;
   padding: 24px;
   background: rgba(16, 185, 129, 0.1);
@@ -2826,7 +2826,7 @@ body::before {
   100% { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
 }
 
-.trial-info {
+.subscription-info {
   color: rgba(255, 255, 255, 0.8);
   font-size: 13px;
   font-weight: 500;

@@ -109,7 +109,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
         <div className="success-message">
           <div className="success-content">
             <h2>🎉 Welcome to AI Signals!</h2>
-            <p>Your 7-day free trial has started successfully</p>
+            <p>Your subscription has started successfully</p>
             <div className="success-animation">
               <div className="checkmark">✓</div>
             </div>
@@ -233,14 +233,14 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                 <div className="pricing-card">
                   <h4>Monthly</h4>
                   <div className="price">$49<span>/month</span></div>
-                  <button className="upgrade-btn">Start Free Trial</button>
+                  <button className="upgrade-btn">Upgrade to Premium</button>
                 </div>
                 <div className="pricing-card popular">
                   <div className="popular-badge">MOST POPULAR</div>
                   <h4>Yearly</h4>
                   <div className="price">$39<span>/month</span></div>
                   <div className="savings">Save $120/year</div>
-                  <button className="upgrade-btn primary">Start Free Trial</button>
+                  <button className="upgrade-btn primary">Upgrade to Premium</button>
                 </div>
                 <div className="pricing-card">
                   <h4>Lifetime</h4>
@@ -251,7 +251,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
             </div>
 
             <div className="trial-notice">
-              <p>🎁 <strong>7-day free trial</strong> - No credit card required</p>
+              <p>💎 <strong>Instant access</strong> - Cancel anytime</p>
               <div className="cta-buttons">
                 <button 
                   className="demo-btn primary"
@@ -306,7 +306,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
       <div className="premium-header">
         <div className="premium-status">
           <span className="premium-badge active">✨ PREMIUM ACTIVE</span>
-          <span className="trial-info">Free Trial • 6 days remaining</span>
+          <span className="subscription-info">Premium Active</span>
         </div>
         <div className="premium-features-active">
           <span>🤖 AI Signals</span>
