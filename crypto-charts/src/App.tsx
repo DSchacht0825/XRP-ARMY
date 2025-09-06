@@ -439,6 +439,7 @@ const App: React.FC = () => {
             marketData={chartData}
             isPremium={user?.plan === 'premium' || user?.plan === 'elite'}
             userPlan={user?.plan || 'free'}
+            user={user}
           />
         </div>
       )}

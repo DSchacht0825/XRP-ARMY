@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { TradingSignal, SignalStats } from '../types/signals';
 import { AISignalGenerator } from '../utils/aiSignalGenerator';
+import PaymentModal from './PaymentModal';
 
 interface TradingSignalsProps {
   currentPrices: { [symbol: string]: number };
   marketData: { [symbol: string]: any[] };
   isPremium?: boolean;
   userPlan?: string;
+  user?: any; // Add user object to access email/username
 }
 
-const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData, isPremium = false, userPlan = 'free' }) => {
+const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData, isPremium = false, userPlan = 'free', user }) => {
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [stats, setStats] = useState<SignalStats | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'buy' | 'sell' | 'active'>('all');
@@ -18,6 +20,8 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   const [signalPerformance, setSignalPerformance] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'newest' | 'confidence' | 'performance'>('newest');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'premium' | 'elite'>('premium');
 
   useEffect(() => {
     // Generate initial signals
@@ -43,6 +47,44 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
     
     setSignals(allSignals);
     setStats(signalStats);
+  };
+
+  // Handle upgrade button clicks for authenticated users
+  const handleUpgradeClick = (planId: 'premium' | 'elite') => {
+    if (user) {
+      // User is authenticated - show upgrade modal
+      console.log('🚀 Authenticated user upgrade click for plan:', planId);
+      setSelectedUpgradePlan(planId);
+      setShowUpgradeModal(true);
+    } else {
+      // User not authenticated - show signup flow
+      console.log('🚀 Unauthenticated user signup click for plan:', planId);
+      localStorage.removeItem('xrp_auth_token');
+      localStorage.removeItem('xrp_user');
+      localStorage.setItem('xrp_signup_plan', planId);
+      console.log('🔄 Reloading page...');
+      window.location.reload();
+    }
+  };
+
+  // Handle successful upgrade payment
+  const handleUpgradeSuccess = async () => {
+    try {
+      const ApiService = (await import('../services/api')).default;
+      const response = await ApiService.upgradeToPremium(selectedUpgradePlan);
+      
+      if (response.success) {
+        console.log('✅ Upgrade successful');
+        alert(`🚀 Successfully upgraded to ${selectedUpgradePlan === 'premium' ? 'Lieutenant' : 'General'}!`);
+        window.location.reload(); // Refresh to update user state
+      } else {
+        alert('❌ Upgrade failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Upgrade error:', error);
+      alert('❌ Upgrade failed. Please try again.');
+    }
+    setShowUpgradeModal(false);
   };
 
   const filteredSignals = signals.filter(signal => {
@@ -233,25 +275,17 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                 <div className="plan-option">
                   <h4>XRP Lieutenant</h4>
                   <div className="price">$20<span>/month</span></div>
-                  <button className="upgrade-btn" onClick={() => {
-                    console.log('🚀 Lieutenant signup button clicked');
-                    localStorage.removeItem('xrp_auth_token');
-                    localStorage.removeItem('xrp_user');
-                    localStorage.setItem('xrp_signup_plan', 'premium');
-                    console.log('🔄 Reloading page...');
-                    window.location.reload();
-                  }}>Get Lieutenant Access</button>
+                  <button className="upgrade-btn" onClick={() => handleUpgradeClick('premium')}>
+                    {user ? 'Upgrade to Lieutenant' : 'Get Lieutenant Access'}
+                  </button>
                 </div>
                 <div className="plan-option popular">
                   <div className="popular-badge">RECOMMENDED</div>
                   <h4>XRP General</h4>
                   <div className="price">$49<span>/month</span></div>
-                  <button className="upgrade-btn primary" onClick={() => {
-                    localStorage.removeItem('xrp_auth_token');
-                    localStorage.removeItem('xrp_user');
-                    localStorage.setItem('xrp_signup_plan', 'elite');
-                    window.location.reload();
-                  }}>Get General Access</button>
+                  <button className="upgrade-btn primary" onClick={() => handleUpgradeClick('elite')}>
+                    {user ? 'Upgrade to General' : 'Get General Access'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -261,14 +295,9 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               <div className="cta-buttons">
                 <button 
                   className="demo-btn primary"
-                  onClick={() => {
-                    localStorage.removeItem('xrp_auth_token');
-                    localStorage.removeItem('xrp_user');
-                    localStorage.setItem('xrp_signup_plan', 'premium');
-                    window.location.reload();
-                  }}
+                  onClick={() => handleUpgradeClick('premium')}
                 >
-                  📝 Sign Up Now
+                  {user ? '🚀 Upgrade Now' : '📝 Sign Up Now'}
                 </button>
                 <button 
                   className="demo-btn secondary"
@@ -513,6 +542,18 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
           ))
         )}
       </div>
+      
+      {/* Upgrade Payment Modal for authenticated users */}
+      {user && (
+        <PaymentModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          planId={selectedUpgradePlan}
+          userEmail={user.email || user.username}
+          userName={user.username}
+          onSuccess={handleUpgradeSuccess}
+        />
+      )}
     </div>
   );
 };
