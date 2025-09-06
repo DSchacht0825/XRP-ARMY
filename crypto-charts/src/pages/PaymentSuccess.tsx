@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/PaymentSuccess.css';
 
 const PaymentSuccess: React.FC = () => {
-  const navigate = useNavigate();
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
 
   useEffect(() => {
@@ -33,9 +31,9 @@ const PaymentSuccess: React.FC = () => {
       if (response.success) {
         console.log('✅ Subscription activated successfully');
         
-        // Redirect to dashboard after 3 seconds
+        // Redirect to main app after 3 seconds
         setTimeout(() => {
-          navigate('/dashboard');
+          window.location.href = '/';
         }, 3000);
       }
     } catch (error) {
@@ -73,7 +71,7 @@ const PaymentSuccess: React.FC = () => {
         
         <button 
           className="dashboard-btn"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => window.location.href = '/'}
         >
           Go to Dashboard Now →
         </button>

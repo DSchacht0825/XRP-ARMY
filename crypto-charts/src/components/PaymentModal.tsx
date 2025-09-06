@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import squarePaymentService, { SUBSCRIPTION_PLANS } from '../services/squarePayment';
+import squarePaymentService, { SUBSCRIPTION_PLANS } from '../services/squarePaymentSimple';
 import '../styles/PaymentModal.css';
 
 interface PaymentModalProps {
@@ -21,7 +21,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'link'>('link');
+  const [paymentMethod, setPaymentMethod] = useState<'link'>('link');
 
   const plan = SUBSCRIPTION_PLANS[planId];
 
@@ -60,41 +60,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
+  // Simplified - only payment links for now
   const handleCardPayment = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Initialize Square card form
-      const card = await squarePaymentService.initializePaymentForm('card-container');
-      
-      // Tokenize card
-      const result = await card.tokenize();
-      
-      if (result.status === 'OK') {
-        // Process one-time payment for first month
-        const paymentResult = await squarePaymentService.processOneTimePayment(
-          planId,
-          userEmail,
-          result.token,
-          userName
-        );
-
-        // Store customer and card ID for future billing
-        localStorage.setItem('square_customer_id', paymentResult.customerId);
-        localStorage.setItem('square_card_id', paymentResult.cardId);
-
-        // Success!
-        onSuccess();
-        onClose();
-      } else {
-        setError('Card validation failed');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Payment processing failed');
-    }
-    
-    setLoading(false);
+    // Redirect to payment link for now
+    await handlePaymentLinkCheckout();
   };
 
   if (!isOpen) return null;
@@ -124,48 +93,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           <div className="payment-methods">
             <div className="method-tabs">
-              <button 
-                className={`tab ${paymentMethod === 'link' ? 'active' : ''}`}
-                onClick={() => setPaymentMethod('link')}
-              >
-                Quick Checkout
-              </button>
-              <button 
-                className={`tab ${paymentMethod === 'card' ? 'active' : ''}`}
-                onClick={() => setPaymentMethod('card')}
-              >
-                Card Payment
+              <button className="tab active">
+                Secure Checkout
               </button>
             </div>
 
-            {paymentMethod === 'link' ? (
-              <div className="payment-link-section">
-                <p>You'll be redirected to Square's secure checkout page</p>
-                <ul className="features-list">
-                  <li>✓ Secure payment processing</li>
-                  <li>✓ Save payment method for future use</li>
-                  <li>✓ Cancel anytime</li>
-                </ul>
-                <button 
-                  className="checkout-btn"
-                  onClick={handlePaymentLinkCheckout}
-                  disabled={loading}
-                >
-                  {loading ? 'Processing...' : 'Continue to Checkout →'}
-                </button>
-              </div>
-            ) : (
-              <div className="card-payment-section">
-                <div id="card-container"></div>
-                <button 
-                  className="pay-btn"
-                  onClick={handleCardPayment}
-                  disabled={loading}
-                >
-                  {loading ? 'Processing...' : `Pay $${(plan.amount / 100).toFixed(2)}`}
-                </button>
-              </div>
-            )}
+            <div className="payment-link-section">
+              <p>You'll be redirected to Square's secure checkout page</p>
+              <ul className="features-list">
+                <li>✓ Secure payment processing</li>
+                <li>✓ Multiple payment methods supported</li>
+                <li>✓ Instant account activation</li>
+              </ul>
+              <button 
+                className="checkout-btn"
+                onClick={handlePaymentLinkCheckout}
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : 'Continue to Checkout →'}
+              </button>
+            </div>
           </div>
 
           <div className="payment-footer">

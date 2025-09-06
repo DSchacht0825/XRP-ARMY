@@ -1,4 +1,4 @@
-import { Client, Environment } from 'square';
+// Square Web API - using fetch instead of Node SDK for browser compatibility
 
 // Square configuration - using production credentials
 const squareClient = new Client({
