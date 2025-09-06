@@ -131,6 +131,63 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Upgrade user plan endpoint
+router.post('/upgrade', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    const { plan } = req.body;
+    
+    if (!plan || !['premium', 'elite'].includes(plan)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valid plan (premium or elite) is required'
+      });
+    }
+
+    // Update user plan in database
+    const { database } = await import('../database');
+    const updatedUser = await database.updateUser(req.user.id!, {
+      plan: plan,
+      is_premium: true,
+      updated_at: new Date()
+    });
+
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update user plan'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Plan upgraded to ${plan}`,
+      data: {
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          plan: updatedUser.plan,
+          isPremium: updatedUser.is_premium
+        }
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Upgrade plan error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upgrade plan'
+    });
+  }
+});
+
 // Validate token endpoint (for frontend session checking)
 router.post('/validate', async (req, res) => {
   try {
