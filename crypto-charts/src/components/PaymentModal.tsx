@@ -68,9 +68,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   if (!isOpen) return null;
 
+  console.log('🔥 PAYMENT MODAL IS RENDERING! isOpen:', isOpen, 'planId:', planId);
+
   return (
-    <div className="payment-modal-overlay">
-      <div className="payment-modal">
+    <div className="payment-modal-overlay" style={{zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <div className="payment-modal" style={{backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '90%', maxHeight: '80vh', overflow: 'auto'}}>
         <div className="payment-modal-header">
           <h2>Complete Your Subscription</h2>
           <button className="close-btn" onClick={onClose}>×</button>
