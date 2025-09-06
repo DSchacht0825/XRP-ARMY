@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TradingSignal, SignalStats } from '../types/signals';
 import { AISignalGenerator } from '../utils/aiSignalGenerator';
-import PaymentModal from './PaymentModal';
 
 interface TradingSignalsProps {
   currentPrices: { [symbol: string]: number };
@@ -20,19 +19,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   const [signalPerformance, setSignalPerformance] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'newest' | 'confidence' | 'performance'>('newest');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  
-  // TEMPORARY TEST: Force modal to show for debugging
-  useEffect(() => {
-    if (user) {
-      console.log('🧪 TEST: Forcing modal to show in 3 seconds...');
-      setTimeout(() => {
-        console.log('🧪 TEST: Setting showUpgradeModal to TRUE');
-        setShowUpgradeModal(true);
-      }, 3000);
-    }
-  }, [user]);
-  const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'premium' | 'elite'>('premium');
+  // No modal state needed - direct redirect to Square
 
   // Debug logging
   console.log('🔍 TradingSignals rendered with user:', user);
@@ -66,16 +53,36 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   };
 
   // Handle upgrade button clicks for authenticated users
-  const handleUpgradeClick = (planId: 'premium' | 'elite') => {
+  const handleUpgradeClick = async (planId: 'premium' | 'elite') => {
     console.log('🔥 Button clicked! Plan:', planId, 'User:', user);
     
     if (user) {
-      // User is authenticated - show upgrade modal
+      // User is authenticated - redirect directly to payment
       console.log('🚀 Authenticated user upgrade click for plan:', planId);
-      console.log('🔍 Setting selectedUpgradePlan to:', planId);
-      setSelectedUpgradePlan(planId);
-      console.log('🔍 Setting showUpgradeModal to true');
-      setShowUpgradeModal(true);
+      
+      try {
+        // Import the payment service and create payment link directly
+        const squarePaymentService = (await import('../services/squarePaymentSimple')).default;
+        console.log('💳 Creating payment link for', planId);
+        
+        const paymentUrl = await squarePaymentService.createPaymentLink(planId, user.email || user.username);
+        
+        // Store plan info for success callback
+        localStorage.setItem('pending_subscription', JSON.stringify({
+          planId,
+          planName: planId === 'premium' ? 'XRP Lieutenant' : 'XRP General',
+          userEmail: user.email || user.username,
+          userName: user.username
+        }));
+
+        console.log('🔗 Redirecting to Square checkout:', paymentUrl);
+        // Redirect directly to Square checkout
+        window.location.href = paymentUrl;
+        
+      } catch (error) {
+        console.error('❌ Payment link creation failed:', error);
+        alert('Payment processing failed. Please try again.');
+      }
     } else {
       // User not authenticated - show signup flow
       console.log('🚀 Unauthenticated user signup click for plan:', planId);
@@ -87,25 +94,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
     }
   };
 
-  // Handle successful upgrade payment
-  const handleUpgradeSuccess = async () => {
-    try {
-      const ApiService = (await import('../services/api')).default;
-      const response = await ApiService.upgradeToPremium(selectedUpgradePlan);
-      
-      if (response.success) {
-        console.log('✅ Upgrade successful');
-        alert(`🚀 Successfully upgraded to ${selectedUpgradePlan === 'premium' ? 'Lieutenant' : 'General'}!`);
-        window.location.reload(); // Refresh to update user state
-      } else {
-        alert('❌ Upgrade failed. Please try again.');
-      }
-    } catch (error) {
-      console.error('❌ Upgrade error:', error);
-      alert('❌ Upgrade failed. Please try again.');
-    }
-    setShowUpgradeModal(false);
-  };
+  // Upgrade success handled by PaymentSuccess component after Square redirect
 
   const filteredSignals = signals.filter(signal => {
     if (selectedSymbol !== 'all' && signal.symbol !== selectedSymbol) return false;
@@ -569,21 +558,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
         )}
       </div>
       
-      {/* Upgrade Payment Modal for authenticated users */}
-      {console.log('🔍 Rendering modal. showUpgradeModal:', showUpgradeModal, 'user:', user)}
-      {user && (
-        <PaymentModal
-          isOpen={showUpgradeModal}
-          onClose={() => {
-            console.log('🔍 Modal close clicked');
-            setShowUpgradeModal(false);
-          }}
-          planId={selectedUpgradePlan}
-          userEmail={user.email || user.username}
-          userName={user.username}
-          onSuccess={handleUpgradeSuccess}
-        />
-      )}
+      {/* Direct payment redirect - no modal needed */}
     </div>
   );
 };
