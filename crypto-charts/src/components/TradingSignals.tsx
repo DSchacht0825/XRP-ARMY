@@ -21,6 +21,17 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   const [sortBy, setSortBy] = useState<'newest' | 'confidence' | 'performance'>('newest');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  
+  // TEMPORARY TEST: Force modal to show for debugging
+  useEffect(() => {
+    if (user) {
+      console.log('🧪 TEST: Forcing modal to show in 3 seconds...');
+      setTimeout(() => {
+        console.log('🧪 TEST: Setting showUpgradeModal to TRUE');
+        setShowUpgradeModal(true);
+      }, 3000);
+    }
+  }, [user]);
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<'premium' | 'elite'>('premium');
 
   // Debug logging

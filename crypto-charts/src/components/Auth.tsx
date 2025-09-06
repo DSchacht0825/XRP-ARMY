@@ -25,6 +25,8 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<string>('Connecting...');
   const [volume24h, setVolume24h] = useState<string>('$2.1B');
+  const [marketCap, setMarketCap] = useState<string>('$28.5B');
+  const [xrpArmyMembers, setXrpArmyMembers] = useState<string>('1.2M+');
 
   const plans = [
     {
@@ -98,7 +100,10 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
 
   // WebSocket connection for live XRP preview
   useEffect(() => {
-    const newSocket = io('http://localhost:5001', {
+    const socketUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://xrp-army-production.up.railway.app'
+      : 'http://localhost:5001';
+    const newSocket = io(socketUrl, {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -106,7 +111,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     });
 
     newSocket.on('connect', () => {
-      console.log('Preview: Connected to server for live XRP data');
+      console.log('🚀 Preview: Connected to server for live XRP data at', socketUrl);
       setConnectionStatus('Connected');
       newSocket.emit('subscribe', 'XRPUSD', '1M');
     });
@@ -120,6 +125,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         const latest = data.data[data.data.length - 1];
         const previous = data.data[data.data.length - 2];
         
+        console.log('📊 Front page: Historical data received, latest price:', latest.close);
         setLivePrice(latest.close);
         
         if (previous) {
@@ -127,6 +133,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
           const changePercent = (change / previous.close) * 100;
           setPriceChange(change);
           setPriceChangePercent(changePercent);
+          console.log('📈 Front page: Price change:', changePercent.toFixed(2) + '%');
         }
       }
     });
@@ -134,6 +141,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     newSocket.on('candleUpdate', (update: { symbol: string; data: any; isFinal: boolean }) => {
       if (update.symbol === 'XRPUSD') {
         const previousPrice = livePrice;
+        console.log('⚡ Front page: Live update - price:', update.data.close);
         setLivePrice(update.data.close);
         
         if (previousPrice > 0) {
