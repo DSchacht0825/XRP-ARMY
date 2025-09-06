@@ -227,25 +227,19 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               </div>
             </div>
 
-            <div className="pricing-section">
-              <h3>Choose Your Plan:</h3>
-              <div className="pricing-cards">
-                <div className="pricing-card">
-                  <h4>Monthly</h4>
+            <div className="subscription-options">
+              <h3>Available Plans:</h3>
+              <div className="plan-options">
+                <div className="plan-option">
+                  <h4>XRP Lieutenant</h4>
+                  <div className="price">$20<span>/month</span></div>
+                  <button className="upgrade-btn" onClick={() => window.location.href = '/#signup'}>Get Lieutenant Access</button>
+                </div>
+                <div className="plan-option popular">
+                  <div className="popular-badge">RECOMMENDED</div>
+                  <h4>XRP General</h4>
                   <div className="price">$49<span>/month</span></div>
-                  <button className="upgrade-btn">Upgrade to Premium</button>
-                </div>
-                <div className="pricing-card popular">
-                  <div className="popular-badge">MOST POPULAR</div>
-                  <h4>Yearly</h4>
-                  <div className="price">$39<span>/month</span></div>
-                  <div className="savings">Save $120/year</div>
-                  <button className="upgrade-btn primary">Upgrade to Premium</button>
-                </div>
-                <div className="pricing-card">
-                  <h4>Lifetime</h4>
-                  <div className="price">$499<span>one-time</span></div>
-                  <button className="upgrade-btn">Get Lifetime Access</button>
+                  <button className="upgrade-btn primary" onClick={() => window.location.href = '/#signup'}>Get General Access</button>
                 </div>
               </div>
             </div>
@@ -255,28 +249,9 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               <div className="cta-buttons">
                 <button 
                   className="demo-btn primary"
-                  onClick={async () => {
-                    try {
-                      const ApiService = (await import('../services/api')).default;
-                      const response = await ApiService.upgradeToPremium('premium');
-                      
-                      if (response.success) {
-                        setShowSuccessMessage(true);
-                        setTimeout(() => {
-                          setShowSuccessMessage(false);
-                          setShowPremiumModal(false);
-                          window.location.reload(); // Refresh to show premium features
-                        }, 2000);
-                      } else {
-                        alert(`❌ Upgrade failed: ${response.error}`);
-                      }
-                    } catch (error) {
-                      console.error('❌ Upgrade error:', error);
-                      alert('❌ Network error. Please try again.');
-                    }
-                  }}
+                  onClick={() => window.location.href = '/#signup'}
                 >
-                  🚀 Upgrade to Premium
+                  📝 Sign Up Now
                 </button>
                 <button 
                   className="demo-btn secondary"
