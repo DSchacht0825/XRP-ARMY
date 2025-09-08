@@ -50,83 +50,47 @@ class SimpleSquarePaymentService {
     return null;
   }
 
-  // Create a payment link using backend API
+  // Create a payment link using backend API - SIMPLIFIED VERSION
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
-    console.log('💳 Square Payment Link Request via Backend:');
+    console.log('💳 SIMPLE Square Payment Link Request:');
     console.log('- Plan:', planId, plan);
     console.log('- User Email:', userEmail);
-    
-    // Get auth token from localStorage - allow bypass for local testing
-    let authToken = localStorage.getItem('xrp_auth_token');
-    if (!authToken && process.env.NODE_ENV === 'production') {
-      throw new Error('Authentication required. Please log in again.');
-    }
-    
-    // For local testing, use a dummy token or allow bypass
-    let finalToken = authToken || 'local-test-token';
 
     // Determine backend URL
     const backendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://xrp-army-production.up.railway.app'
       : 'http://localhost:5001';
     
-    const makeRequest = async (token: string) => {
-      return await fetch(`${backendUrl}/api/payment/create-payment-link`, {
+    try {
+      const response = await fetch(`${backendUrl}/api/payment/create-payment-link`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           planId,
           userEmail
         })
       });
-    };
-    
-    try {
-      let response = await makeRequest(finalToken);
-
-      // If we get a 403 error and we're in production, try to refresh the token
-      if (!response.ok && response.status === 403 && process.env.NODE_ENV === 'production' && authToken) {
-        console.log('🔄 Token expired, attempting refresh...');
-        const newToken = await this.refreshToken();
-        
-        if (newToken) {
-          finalToken = newToken;
-          response = await makeRequest(finalToken);
-        }
-      }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('❌ Backend API Error:', response.status, response.statusText);
-        console.error('❌ Backend API Error Body:', errorData);
-        
-        if (response.status === 403) {
-          throw new Error('Authentication failed. Please log in again.');
-        }
-        
-        throw new Error(`Backend API Error (${response.status}): ${errorData.error || 'Unknown error'}`);
+        const errorText = await response.text();
+        console.error('❌ Backend Error:', response.status, errorText);
+        throw new Error(`Payment failed (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
       
       if (data.success && data.payment_url) {
-        console.log('✅ Payment link created successfully via backend');
+        console.log('✅ Payment link created successfully');
         return data.payment_url;
       }
       
-      throw new Error('Payment link URL not found in backend response');
+      throw new Error('Payment link not found in response');
     } catch (error) {
-      console.error('❌ Square payment link error:', error);
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error: Unable to connect to Square API. This may be due to CORS restrictions or network issues.');
-      }
-      
+      console.error('❌ Payment error:', error);
       throw error;
     }
   }
