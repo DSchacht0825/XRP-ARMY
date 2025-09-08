@@ -1,9 +1,9 @@
 import React from 'react';
 
-// DIRECT SQUARE CHECKOUT LINKS - NO BACKEND REQUIRED
+// DIRECT SQUARE CHECKOUT LINKS - REAL LINKS FROM YOUR SQUARE ACCOUNT
 const SQUARE_CHECKOUT_LINKS = {
-  premium: 'https://square.link/u/nXRP20LT', // XRP Lieutenant - $20/month
-  elite: 'https://square.link/u/nXRP49GN'    // XRP General - $49/month
+  premium: 'https://square.link/u/FYrYvBjt', // XRP Lieutenant - $20/month
+  elite: 'https://square.link/u/7xs2lxXZ'    // XRP General - $49/month
 };
 
 interface DirectSquareCheckoutProps {
