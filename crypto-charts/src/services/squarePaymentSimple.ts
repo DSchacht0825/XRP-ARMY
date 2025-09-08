@@ -17,6 +17,39 @@ export const SUBSCRIPTION_PLANS = {
 };
 
 class SimpleSquarePaymentService {
+  // Helper method to refresh token
+  private async refreshToken(): Promise<string | null> {
+    const currentToken = localStorage.getItem('xrp_auth_token');
+    if (!currentToken) return null;
+
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://xrp-army-production.up.railway.app'
+      : 'http://localhost:5001';
+    
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token: currentToken })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.token) {
+          localStorage.setItem('xrp_auth_token', data.data.token);
+          console.log('🔄 Token refreshed successfully');
+          return data.data.token;
+        }
+      }
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+    }
+    
+    return null;
+  }
+
   // Create a payment link using backend API
   async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
@@ -25,34 +58,56 @@ class SimpleSquarePaymentService {
     console.log('- Plan:', planId, plan);
     console.log('- User Email:', userEmail);
     
-    // Get auth token from localStorage
-    const authToken = localStorage.getItem('xrp_auth_token');
-    if (!authToken) {
+    // Get auth token from localStorage - allow bypass for local testing
+    let authToken = localStorage.getItem('xrp_auth_token');
+    if (!authToken && process.env.NODE_ENV === 'production') {
       throw new Error('Authentication required. Please log in again.');
     }
+    
+    // For local testing, use a dummy token or allow bypass
+    let finalToken = authToken || 'local-test-token';
 
     // Determine backend URL
     const backendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://xrp-army-production.up.railway.app'
       : 'http://localhost:5001';
     
-    try {
-      const response = await fetch(`${backendUrl}/api/payment/create-payment-link`, {
+    const makeRequest = async (token: string) => {
+      return await fetch(`${backendUrl}/api/payment/create-payment-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           planId,
           userEmail
         })
       });
+    };
+    
+    try {
+      let response = await makeRequest(finalToken);
+
+      // If we get a 403 error and we're in production, try to refresh the token
+      if (!response.ok && response.status === 403 && process.env.NODE_ENV === 'production' && authToken) {
+        console.log('🔄 Token expired, attempting refresh...');
+        const newToken = await this.refreshToken();
+        
+        if (newToken) {
+          finalToken = newToken;
+          response = await makeRequest(finalToken);
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error('❌ Backend API Error:', response.status, response.statusText);
         console.error('❌ Backend API Error Body:', errorData);
+        
+        if (response.status === 403) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         
         throw new Error(`Backend API Error (${response.status}): ${errorData.error || 'Unknown error'}`);
       }

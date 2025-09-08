@@ -173,6 +173,66 @@ router.post('/validate', async (req, res) => {
   }
 });
 
+// Refresh token endpoint
+router.post('/refresh', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token is required'
+      });
+    }
+
+    const user = await AuthService.validateSession(token);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
+    }
+
+    // Generate new token
+    const newToken = AuthService.generateToken(user);
+    
+    // Create new session
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const database = require('../database').database;
+    await database.createSession(user.id!, newToken, expiresAt);
+
+    // Delete old session
+    await database.deleteSession(token);
+
+    console.log(`🔄 Token refreshed for user ${user.username}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Token refreshed successfully',
+      data: {
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          plan: user.plan,
+          isPremium: user.is_premium,
+          trialEndsAt: user.trial_ends_at ? new Date(user.trial_ends_at).toISOString() : undefined
+        },
+        token: newToken,
+        expiresIn: '7d'
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Token refresh error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Token refresh failed'
+    });
+  }
+});
+
 // Upgrade to premium (mock payment processing)
 router.post('/upgrade', authenticateToken, async (req: AuthRequest, res) => {
   try {

@@ -226,12 +226,23 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
 
   useEffect(() => {
     if (candlestickSeriesRef.current && data.length > 0) {
+      console.log('📊 Chart data sample:', data.slice(0, 3));
+      
       let formattedData: any[];
+      
+      // Helper function to ensure proper time formatting
+      const formatTime = (timestamp: number) => {
+        // Convert to seconds if it's in milliseconds
+        if (timestamp > 9999999999) {
+          return Math.floor(timestamp / 1000);
+        }
+        return timestamp;
+      };
       
       if (chartType === 'line') {
         // For line chart, use only close prices
         formattedData = data.map(candle => ({
-          time: candle.time as any,
+          time: formatTime(candle.time),
           value: candle.close
         }));
       } else if (chartType === 'heikin-ashi') {
@@ -247,7 +258,7 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
           const haLow = Math.min(candle.low, haOpen, haClose);
           
           const haCandle = {
-            time: candle.time as any,
+            time: formatTime(candle.time),
             open: haOpen,
             high: haHigh,
             low: haLow,
@@ -260,13 +271,15 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
       } else {
         // Regular candlestick data
         formattedData = data.map(candle => ({
-          time: candle.time as any,
+          time: formatTime(candle.time),
           open: candle.open,
           high: candle.high,
           low: candle.low,
           close: candle.close
         }));
       }
+      
+      console.log('📊 Formatted data sample:', formattedData.slice(0, 3));
       
       candlestickSeriesRef.current.setData(formattedData);
       
