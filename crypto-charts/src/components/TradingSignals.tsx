@@ -52,50 +52,42 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
     setStats(signalStats);
   };
 
-  // Handle upgrade button clicks for authenticated users
-  const handleUpgradeClick = async (planId: 'premium' | 'elite') => {
+  // DIRECT SQUARE CHECKOUT LINKS - NO BACKEND REQUIRED
+  const SQUARE_CHECKOUT_LINKS = {
+    premium: 'https://square.link/u/FYrYvBjt', // XRP Lieutenant - $20/month
+    elite: 'https://square.link/u/7xs2lxXZ'    // XRP General - $49/month
+  };
+
+  // Handle upgrade button clicks - DIRECT REDIRECT TO SQUARE
+  const handleUpgradeClick = (planId: 'premium' | 'elite') => {
+    console.log('💰 DIRECT Square Checkout - No backend needed!');
     console.log('🔥 Button clicked! Plan:', planId, 'User:', user);
     
-    if (user) {
-      // User is authenticated - redirect directly to payment
-      console.log('🚀 Authenticated user upgrade click for plan:', planId);
+    // Get the direct Square checkout link
+    const checkoutUrl = SQUARE_CHECKOUT_LINKS[planId];
+    
+    if (checkoutUrl) {
+      // Add email to URL if user is logged in
+      const userEmail = user?.email || user?.username;
+      const finalUrl = userEmail 
+        ? `${checkoutUrl}?email=${encodeURIComponent(userEmail)}`
+        : checkoutUrl;
       
-      try {
-        // Import the payment service and create payment link directly
-        const squarePaymentService = (await import('../services/squarePaymentSimple')).default;
-        console.log('💳 Creating payment link for', planId);
-        
-        const paymentUrl = await squarePaymentService.createPaymentLink(planId, user.email || user.username);
-        
-        // Store plan info for success callback
-        localStorage.setItem('pending_subscription', JSON.stringify({
-          planId,
-          planName: planId === 'premium' ? 'XRP Lieutenant' : 'XRP General',
-          userEmail: user.email || user.username,
-          userName: user.username
-        }));
-
-        console.log('🔗 Redirecting to Square checkout:', paymentUrl);
-        // Redirect directly to Square checkout
-        window.location.href = paymentUrl;
-        
-      } catch (error: any) {
-        console.error('❌ Payment link creation failed:', error);
-        console.error('❌ Error details:', error.message);
-        console.error('❌ Error stack:', error.stack);
-        if (error.response) {
-          console.error('❌ API Response:', error.response);
-        }
-        alert(`Payment processing failed: ${error.message || 'Unknown error'}. Please try again.`);
-      }
+      // Store plan info for tracking
+      localStorage.setItem('pending_subscription', JSON.stringify({
+        planId,
+        planName: planId === 'premium' ? 'XRP Lieutenant' : 'XRP General',
+        userEmail: userEmail,
+        userName: user?.username
+      }));
+      
+      console.log('🚀 Redirecting directly to Square:', finalUrl);
+      
+      // Redirect directly to Square checkout - INSTANT!
+      window.location.href = finalUrl;
     } else {
-      // User not authenticated - show signup flow
-      console.log('🚀 Unauthenticated user signup click for plan:', planId);
-      localStorage.removeItem('xrp_auth_token');
-      localStorage.removeItem('xrp_user');
-      localStorage.setItem('xrp_signup_plan', planId);
-      console.log('🔄 Reloading page...');
-      window.location.reload();
+      console.error('❌ Invalid plan ID');
+      alert('Invalid subscription plan. Please try again.');
     }
   };
 
