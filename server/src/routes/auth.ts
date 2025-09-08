@@ -17,6 +17,14 @@ router.post('/signup', async (req, res) => {
 
     const result = await AuthService.signup(username, email, password, plan);
 
+    // Debug: Check if user was really created
+    console.log(`🔍 DEBUG: User signup result:`, {
+      userId: result.user.id,
+      username: result.user.username,
+      email: result.user.email,
+      plan: result.user.plan
+    });
+
     res.status(201).json({
       success: true,
       message: `Welcome to XRP Army, ${username}! ${plan !== 'free' ? 'Your 7-day free trial has started!' : ''}`,

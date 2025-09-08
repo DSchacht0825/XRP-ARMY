@@ -27,7 +27,21 @@ class Database {
   private db: sqlite3.Database;
 
   constructor() {
-    const dbPath = path.join(__dirname, '../xrp_terminal.db');
+    // Use persistent volume path in production, local path in development
+    const dbPath = process.env.NODE_ENV === 'production' 
+      ? '/app/data/xrp_terminal.db'  // Railway persistent volume
+      : path.join(__dirname, '../xrp_terminal.db');
+    
+    // Ensure directory exists in production
+    if (process.env.NODE_ENV === 'production') {
+      const fs = require('fs');
+      const dir = path.dirname(dbPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log('📁 Created data directory for persistent storage');
+      }
+    }
+    
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('❌ Error opening database:', err);
