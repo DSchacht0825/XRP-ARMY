@@ -205,7 +205,7 @@ router.post('/refresh', async (req, res) => {
     // Delete old session
     await database.deleteSession(token);
 
-    console.log(`🔄 Token refreshed for user ${user.username}`);
+    console.log(`🔄 Token refreshed successfully for user ${user.username}`);
 
     res.status(200).json({
       success: true,
