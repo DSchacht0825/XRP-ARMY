@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import squarePaymentService, { SUBSCRIPTION_PLANS } from '../services/squarePaymentSimple';
+import DirectSquareCheckout from './DirectSquareCheckout';
 import '../styles/PaymentModal.css';
 
 interface PaymentModalProps {
@@ -107,10 +108,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <li>✓ Multiple payment methods supported</li>
                 <li>✓ Instant account activation</li>
               </ul>
+              
+              {/* DIRECT SQUARE CHECKOUT - NO BACKEND NEEDED */}
+              <DirectSquareCheckout 
+                planId={planId} 
+                userEmail={userEmail}
+              />
+              
+              {/* Original button as fallback */}
               <button 
                 className="checkout-btn"
                 onClick={handlePaymentLinkCheckout}
                 disabled={loading}
+                style={{ display: 'none' }}
               >
                 {loading ? 'Processing...' : 'Continue to Checkout →'}
               </button>
