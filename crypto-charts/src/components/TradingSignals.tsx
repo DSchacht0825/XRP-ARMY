@@ -10,7 +10,7 @@ interface TradingSignalsProps {
   user?: any; // Add user object to access email/username
 }
 
-const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData, isPremium = false, userPlan = 'free', user }) => {
+const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketData, isPremium = false, userPlan = 'basic', user }) => {
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [stats, setStats] = useState<SignalStats | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'buy' | 'sell' | 'active'>('all');
@@ -25,6 +25,10 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   console.log('🔍 TradingSignals rendered with user:', user);
   console.log('🔍 User plan:', userPlan);
   console.log('🔍 Is premium:', isPremium);
+  console.log('🔍 User isActiveSubscription:', user?.isActiveSubscription);
+  
+  // Enhanced premium detection
+  const hasActivePremium = isPremium || user?.plan === 'premium' || user?.isActiveSubscription;
 
   useEffect(() => {
     // Generate initial signals
@@ -52,14 +56,14 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
     setStats(signalStats);
   };
 
-  // DIRECT SQUARE CHECKOUT LINKS - NO BACKEND REQUIRED
+  // LIVE SQUARE CHECKOUT LINKS - UPDATED PLANS
   const SQUARE_CHECKOUT_LINKS = {
-    premium: 'https://square.link/u/FYrYvBjt', // XRP Lieutenant - $20/month
-    elite: 'https://square.link/u/7xs2lxXZ'    // XRP General - $49/month
+    basic: 'https://square.link/u/FYrYvBjt',    // XRP Army Basic - $9.99/month
+    premium: 'https://square.link/u/7xs2lxXZ'  // XRP Army Premium - $20/month
   };
 
   // Handle upgrade button clicks - DIRECT REDIRECT TO SQUARE
-  const handleUpgradeClick = (planId: 'premium' | 'elite') => {
+  const handleUpgradeClick = (planId: 'basic' | 'premium') => {
     console.log('💰 DIRECT Square Checkout - No backend needed!');
     console.log('🔥 Button clicked! Plan:', planId, 'User:', user);
     
@@ -76,7 +80,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
       // Store plan info for tracking
       localStorage.setItem('pending_subscription', JSON.stringify({
         planId,
-        planName: planId === 'premium' ? 'XRP Lieutenant' : 'XRP General',
+        planName: planId === 'premium' ? 'XRP Army Premium' : 'XRP Army Basic',
         userEmail: userEmail,
         userName: user?.username
       }));
@@ -168,7 +172,7 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
     );
   }
 
-  if (!isPremium) {
+  if (!hasActivePremium) {
     return (
       <div className="trading-signals-container">
         <div className="premium-paywall">
@@ -279,24 +283,24 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
               <h3>Available Plans:</h3>
               <div className="plan-options">
                 <div className="plan-option">
-                  <h4>XRP Lieutenant</h4>
-                  <div className="price">$20<span>/month</span></div>
+                  <h4>XRP Army Basic</h4>
+                  <div className="price">$9.99<span>/month</span></div>
                   <button className="upgrade-btn" onClick={() => {
-                    console.log('🔥 DIRECT BUTTON TEST - this should appear in console!');
-                    handleUpgradeClick('premium');
+                    console.log('🔥 BASIC PLAN BUTTON - $9.99/month');
+                    handleUpgradeClick('basic');
                   }}>
-                    {user ? 'Upgrade to Lieutenant' : 'Get Lieutenant Access'}
+                    {user ? 'Upgrade to Basic' : 'Get Basic Access'}
                   </button>
                 </div>
                 <div className="plan-option popular">
                   <div className="popular-badge">RECOMMENDED</div>
-                  <h4>XRP General</h4>
-                  <div className="price">$49<span>/month</span></div>
+                  <h4>XRP Army Premium</h4>
+                  <div className="price">$20<span>/month</span></div>
                   <button className="upgrade-btn primary" onClick={() => {
-                    console.log('🔥 GENERAL BUTTON TEST - this should appear in console!');
-                    handleUpgradeClick('elite');
+                    console.log('🔥 PREMIUM PLAN BUTTON - $20/month with AI');
+                    handleUpgradeClick('premium');
                   }}>
-                    {user ? 'Upgrade to General' : 'Get General Access'}
+                    {user ? 'Upgrade to Premium' : 'Get Premium Access'}
                   </button>
                 </div>
               </div>

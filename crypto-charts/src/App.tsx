@@ -438,8 +438,8 @@ const App: React.FC = () => {
               'XRPUSD': chartData['XRPUSD']?.[chartData['XRPUSD'].length - 1]?.close || 0,
             }}
             marketData={chartData}
-            isPremium={user?.plan === 'premium' || user?.plan === 'elite'}
-            userPlan={user?.plan || 'free'}
+            isPremium={user?.plan === 'premium' || user?.isActiveSubscription}
+            userPlan={user?.plan || 'basic'}
             user={user}
           />
         </div>
