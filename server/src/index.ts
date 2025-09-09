@@ -409,9 +409,19 @@ io.on('connection', (socket) => {
       data = data.filter(candle => candle.time >= cutoffTime);
     }
     
+    // Sample data if too many points for chart performance
+    let finalData = data;
+    if (data.length > 2000) {
+      // Take every nth point to get ~2000 data points max
+      const step = Math.ceil(data.length / 2000);
+      finalData = data.filter((_, index) => index % step === 0);
+      console.log(`📉 Sampled ${data.length} → ${finalData.length} candles (every ${step}th) for better chart performance`);
+    }
+    
+    console.log(`📤 Sending ${finalData.length} candles for ${symbol} (${period} period)`);
     socket.emit('historicalData', {
       symbol,
-      data: data
+      data: finalData
     });
   });
 

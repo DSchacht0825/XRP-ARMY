@@ -201,8 +201,12 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
         return;
       }
 
-      // Find the candle data at the crosshair position
-      const candleData = data.find((candle: CandleData) => candle.time === param.time);
+      // Find the candle data at the crosshair position using formatted time
+      const formattedTime = typeof param.time === 'number' ? param.time : parseInt(param.time);
+      const candleData = data.find((candle: CandleData) => {
+        const candleTime = candle.time > 9999999999 ? Math.floor(candle.time / 1000) : candle.time;
+        return candleTime === formattedTime;
+      });
       if (candleData) {
         setCurrentData(candleData);
       }
@@ -233,7 +237,8 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
   useEffect(() => {
     if (candlestickSeriesRef.current && data.length > 0) {
       try {
-        console.log('📊 Chart data sample:', data.slice(0, 3));
+        console.log('📊 RAW Chart data sample:', data.slice(0, 3));
+        console.log('📊 RAW Chart data length:', data.length);
       
       let formattedData: any[];
       
@@ -287,6 +292,18 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
       }
       
       console.log('📊 Formatted data sample:', formattedData.slice(0, 3));
+      console.log('🔍 Data corruption check:', {
+        rawFirst: data[0],
+        formattedFirst: formattedData[0],
+        rawPriceRange: {
+          min: Math.min(...data.slice(0, 100).map(d => d.close)),
+          max: Math.max(...data.slice(0, 100).map(d => d.close))
+        },
+        formattedPriceRange: {
+          min: Math.min(...formattedData.slice(0, 100).map(d => d.close || d.value || 0)),
+          max: Math.max(...formattedData.slice(0, 100).map(d => d.close || d.value || 0))
+        }
+      });
       
       candlestickSeriesRef.current.setData(formattedData);
       
