@@ -6,9 +6,10 @@ import axios from 'axios';
 
 interface PortfolioProps {
   currentPrices: { [symbol: string]: number };
+  user?: any;
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ currentPrices }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ currentPrices, user }) => {
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
@@ -18,7 +19,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ currentPrices }) => {
   const [syncLoading, setSyncLoading] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  const userId = 'demo-user'; // In production, get from auth context
+  const userId = user?.id || user?.email || 'anonymous';
 
   useEffect(() => {
     // Initialize with sample data
@@ -112,7 +113,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ currentPrices }) => {
   return (
     <div className="portfolio-container">
       {/* Exchange Connection */}
-      <ExchangeConnection onConnectionChange={handleConnectionChange} />
+      <ExchangeConnection onConnectionChange={handleConnectionChange} user={user} />
 
       {/* Sync Status */}
       {isExchangeConnected && (

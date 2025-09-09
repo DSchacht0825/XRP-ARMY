@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import authRoutes from './routes/auth';
 import paymentRoutes from './routes/payment';
 import { database } from './database';
+import CoinbaseExchangeAPI from './exchanges/coinbaseExchange';
 // import { ExchangeManager } from './exchangeManager';
 
 const app = express();
@@ -56,6 +57,15 @@ interface HistoricalData {
 const historicalData: HistoricalData = {
   'XRPUSD': []
 };
+
+// In-memory store for exchange connections (in production, use database)
+const userExchangeConnections: {
+  [userId: string]: {
+    exchange: string;
+    api: CoinbaseExchangeAPI;
+    connected: boolean;
+  }
+} = {};
 
 // Generate simulated historical data with realistic patterns
 function generateHistoricalData(symbol: string, period: string = 'ALL') {
@@ -441,38 +451,180 @@ app.get('/api/historical/:symbol', (req, res) => {
   res.json(data);
 });
 
-// Exchange API endpoints (temporarily disabled)
+// Exchange API endpoints
 app.post('/api/exchange/connect', async (req, res) => {
-  res.json({ success: false, error: 'Exchange integration temporarily disabled for demo' });
+  try {
+    const { userId, credentials } = req.body;
+    
+    if (!userId || !credentials) {
+      return res.json({ success: false, error: 'Missing userId or credentials' });
+    }
+
+    // Currently only support Coinbase
+    if (credentials.exchangeName !== 'coinbase') {
+      return res.json({ success: false, error: 'Currently only Coinbase Exchange is supported' });
+    }
+
+    // Create Coinbase API instance
+    const coinbaseAPI = new CoinbaseExchangeAPI({
+      apiKey: credentials.apiKey,
+      secret: credentials.secret,
+      passphrase: credentials.passphrase,
+      sandbox: credentials.sandbox || false
+    });
+
+    // Test connection
+    const connected = await coinbaseAPI.testConnection();
+    
+    if (connected) {
+      // Store connection
+      userExchangeConnections[userId] = {
+        exchange: 'coinbase',
+        api: coinbaseAPI,
+        connected: true
+      };
+      
+      res.json({ 
+        success: true, 
+        message: 'Successfully connected to Coinbase Exchange',
+        data: { exchange: 'coinbase' }
+      });
+    } else {
+      res.json({ success: false, error: 'Failed to connect to Coinbase Exchange. Please check your credentials.' });
+    }
+  } catch (error: any) {
+    console.error('Exchange connection error:', error);
+    res.json({ success: false, error: error.message || 'Connection failed' });
+  }
 });
 
 app.get('/api/exchange/balances/:userId', async (req, res) => {
-  res.json({ success: false, error: 'Exchange integration temporarily disabled for demo' });
+  try {
+    const userId = req.params.userId;
+    const connection = userExchangeConnections[userId];
+    
+    if (!connection || !connection.connected) {
+      return res.json({ success: false, error: 'No active exchange connection found' });
+    }
+
+    if (connection.exchange === 'coinbase') {
+      const accounts = await connection.api.getAccounts();
+      const balances = accounts
+        .filter((account: any) => parseFloat(account.balance) > 0)
+        .map((account: any) => ({
+          currency: account.currency,
+          balance: parseFloat(account.balance),
+          available: parseFloat(account.available),
+        }));
+      
+      res.json({ success: true, data: balances });
+    } else {
+      res.json({ success: false, error: 'Unsupported exchange' });
+    }
+  } catch (error: any) {
+    console.error('Exchange balances error:', error);
+    res.json({ success: false, error: error.message || 'Failed to get balances' });
+  }
 });
 
 app.get('/api/exchange/trades/:userId', async (req, res) => {
-  res.json({ success: false, error: 'Exchange integration temporarily disabled for demo' });
+  try {
+    const userId = req.params.userId;
+    const connection = userExchangeConnections[userId];
+    
+    if (!connection || !connection.connected) {
+      return res.json({ success: false, error: 'No active exchange connection found' });
+    }
+
+    if (connection.exchange === 'coinbase') {
+      const fills = await connection.api.getFills();
+      const trades = fills.map((fill: any) => ({
+        id: fill.trade_id.toString(),
+        product: fill.product_id,
+        side: fill.side,
+        price: parseFloat(fill.price),
+        size: parseFloat(fill.size),
+        fee: parseFloat(fill.fee),
+        timestamp: fill.created_at
+      }));
+      
+      res.json({ success: true, data: trades });
+    } else {
+      res.json({ success: false, error: 'Unsupported exchange' });
+    }
+  } catch (error: any) {
+    console.error('Exchange trades error:', error);
+    res.json({ success: false, error: error.message || 'Failed to get trades' });
+  }
 });
 
 app.get('/api/exchange/orders/:userId', async (req, res) => {
-  res.json({ success: false, error: 'Exchange integration temporarily disabled for demo' });
+  try {
+    const userId = req.params.userId;
+    const connection = userExchangeConnections[userId];
+    
+    if (!connection || !connection.connected) {
+      return res.json({ success: false, error: 'No active exchange connection found' });
+    }
+
+    // For now, return empty orders as we're read-only
+    res.json({ success: true, data: [] });
+  } catch (error: any) {
+    console.error('Exchange orders error:', error);
+    res.json({ success: false, error: error.message || 'Failed to get orders' });
+  }
 });
 
 app.post('/api/exchange/sync/:userId', async (req, res) => {
-  res.json({ success: false, error: 'Exchange integration temporarily disabled for demo' });
+  try {
+    const userId = req.params.userId;
+    const connection = userExchangeConnections[userId];
+    
+    if (!connection || !connection.connected) {
+      return res.json({ success: false, error: 'No active exchange connection found' });
+    }
+
+    // Currently only support Coinbase
+    if (connection.exchange === 'coinbase') {
+      const data = await connection.api.getXRPData();
+      
+      res.json({
+        success: true,
+        data: {
+          balances: data.balances,
+          trades: data.trades
+        }
+      });
+    } else {
+      res.json({ success: false, error: 'Unsupported exchange' });
+    }
+  } catch (error: any) {
+    console.error('Exchange sync error:', error);
+    res.json({ success: false, error: error.message || 'Sync failed' });
+  }
 });
 
 app.get('/api/exchange/status/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const connection = userExchangeConnections[userId];
+  
   res.json({ 
     success: true, 
     data: { 
-      connected: false, 
-      exchange: null 
+      connected: connection?.connected || false, 
+      exchange: connection?.exchange || null 
     } 
   });
 });
 
 app.delete('/api/exchange/disconnect/:userId', (req, res) => {
+  const userId = req.params.userId;
+  
+  // Remove connection from memory
+  if (userExchangeConnections[userId]) {
+    delete userExchangeConnections[userId];
+  }
+  
   res.json({ success: true, message: 'Exchange disconnected successfully' });
 });
 

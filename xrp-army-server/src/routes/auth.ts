@@ -135,7 +135,7 @@ router.get('/me', authenticateToken, requireActiveSubscription, async (req: Auth
   }
 });
 
-// Create Square checkout link for subscription
+// Get live Square checkout link for subscription
 router.post('/subscribe', authenticateToken, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
@@ -156,14 +156,14 @@ router.post('/subscribe', authenticateToken, async (req: AuthRequest, res) => {
 
     const selectedPlan = PRICING_TIERS[plan];
     
-    // Create Square checkout link
-    console.log(`💳 Creating Square checkout for user ${req.user.username} - Plan: ${plan} ($${selectedPlan.price}/month)`);
+    // Get live Square checkout link
+    console.log(`💳 Directing user ${req.user.username} to LIVE Square checkout - Plan: ${plan} ($${selectedPlan.price}/month)`);
 
-    const checkoutUrl = await squarePayment.createCheckoutLink(plan, req.user.id!);
+    const checkoutUrl = squarePayment.getCheckoutLink(plan, req.user.id!);
 
     res.json({
       success: true,
-      message: `Redirecting to Square checkout for ${selectedPlan.name} plan`,
+      message: `Redirecting to live Square checkout for ${selectedPlan.name} plan`,
       data: {
         checkoutUrl,
         plan: {
@@ -171,7 +171,9 @@ router.post('/subscribe', authenticateToken, async (req: AuthRequest, res) => {
           name: selectedPlan.name,
           price: selectedPlan.price,
           features: selectedPlan.features
-        }
+        },
+        isLive: true,
+        paymentProcessor: 'Square'
       }
     });
 
@@ -179,7 +181,7 @@ router.post('/subscribe', authenticateToken, async (req: AuthRequest, res) => {
     console.error('❌ Subscribe error:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Failed to create checkout link'
+      error: 'Failed to get checkout link'
     });
   }
 });
@@ -261,13 +263,15 @@ router.post('/cancel-subscription', authenticateToken, requireActiveSubscription
   }
 });
 
-// Get pricing information
+// Get pricing information with live checkout links
 router.get('/pricing', (req, res) => {
   res.json({
     success: true,
     data: {
-      plans: PRICING_TIERS,
-      message: 'No free trials. Subscription required for access.'
+      plans: squarePayment.getAllPlans(),
+      message: 'Live payment processing. No free trials. Subscription required for access.',
+      paymentProcessor: 'Square',
+      isLive: true
     }
   });
 });

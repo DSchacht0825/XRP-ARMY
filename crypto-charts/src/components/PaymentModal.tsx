@@ -6,7 +6,7 @@ import '../styles/PaymentModal.css';
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  planId: 'premium' | 'elite';
+  planId: 'basic' | 'premium';
   userEmail: string;
   userName?: string;
   onSuccess: () => void;
@@ -85,7 +85,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="price-display">
               <span className="amount">${(plan.amount / 100).toFixed(2)}</span>
               <span className="period">/month</span>
+              <span className="live-badge" style={{color: '#e74c3c', fontWeight: 'bold', marginLeft: '10px'}}>[LIVE]</span>
             </div>
+            {plan.features && (
+              <ul className="plan-features" style={{fontSize: '14px', marginTop: '10px'}}>
+                {plan.features.slice(0, 3).map((feature, index) => (
+                  <li key={index}>✓ {feature}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {error && (
@@ -104,9 +112,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="payment-link-section">
               <p>You'll be redirected to Square's secure checkout page</p>
               <ul className="features-list">
-                <li>✓ Secure payment processing</li>
-                <li>✓ Multiple payment methods supported</li>
+                <li>✓ Live payment processing (not demo)</li>
+                <li>✓ Secure Square checkout</li>
                 <li>✓ Instant account activation</li>
+                <li>✓ Real subscription billing</li>
               </ul>
               
               {/* DIRECT SQUARE CHECKOUT - NO BACKEND NEEDED */}
@@ -129,7 +138,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           <div className="payment-footer">
             <p className="security-note">
-              🔒 Payments secured by Square
+              🔒 Live payments secured by Square - This is real billing
             </p>
             <p className="terms">
               By subscribing, you agree to our Terms of Service and Privacy Policy.

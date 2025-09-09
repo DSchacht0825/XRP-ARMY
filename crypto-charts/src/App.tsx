@@ -420,6 +420,7 @@ const App: React.FC = () => {
             currentPrices={{
               'XRPUSD': chartData['XRPUSD']?.[chartData['XRPUSD'].length - 1]?.close || 0,
             }}
+            user={user}
           />
         </div>
       ) : activeView === 'alerts' ? (

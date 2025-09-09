@@ -1,13 +1,13 @@
 import React from 'react';
 
-// DIRECT SQUARE CHECKOUT LINKS - REAL LINKS FROM YOUR SQUARE ACCOUNT
+// LIVE SQUARE CHECKOUT LINKS - PRODUCTION READY
 const SQUARE_CHECKOUT_LINKS = {
-  premium: 'https://square.link/u/FYrYvBjt', // XRP Lieutenant - $20/month
-  elite: 'https://square.link/u/7xs2lxXZ'    // XRP General - $49/month
+  basic: 'https://square.link/u/FYrYvBjt',    // XRP Army Basic - $9.99/month
+  premium: 'https://square.link/u/7xs2lxXZ'  // XRP Army Premium - $20/month
 };
 
 interface DirectSquareCheckoutProps {
-  planId: 'premium' | 'elite';
+  planId: 'basic' | 'premium';
   userEmail?: string;
 }
 
@@ -39,7 +39,7 @@ const DirectSquareCheckout: React.FC<DirectSquareCheckoutProps> = ({ planId, use
       onClick={handleDirectPayment}
       className="direct-checkout-btn"
       style={{
-        backgroundColor: planId === 'elite' ? '#FFD700' : '#4CAF50',
+        backgroundColor: planId === 'premium' ? '#FFD700' : '#4CAF50',
         color: 'white',
         padding: '12px 24px',
         fontSize: '16px',
@@ -51,7 +51,7 @@ const DirectSquareCheckout: React.FC<DirectSquareCheckoutProps> = ({ planId, use
         marginTop: '10px'
       }}
     >
-      💳 Pay with Square - {planId === 'elite' ? '$49/month' : '$20/month'}
+      💳 Pay with Square - {planId === 'premium' ? '$20/month' : '$9.99/month'} [LIVE]
     </button>
   );
 };

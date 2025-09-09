@@ -11,9 +11,10 @@ interface ExchangeCredentials {
 
 interface ExchangeConnectionProps {
   onConnectionChange: (connected: boolean, exchangeName?: string) => void;
+  user?: any;
 }
 
-const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionChange }) => {
+const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionChange, user }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectedExchange, setConnectedExchange] = useState<string | null>(null);
   const [showConnectForm, setShowConnectForm] = useState(false);
@@ -26,7 +27,7 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
     sandbox: true
   });
 
-  const userId = 'demo-user'; // In production, get from auth context
+  const userId = user?.id || user?.email || 'anonymous';
 
   useEffect(() => {
     checkConnectionStatus();
@@ -112,7 +113,7 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
 
   const exchangeInfo = {
     binance: { name: 'Binance', color: '#f0b90b', needsPassphrase: false },
-    coinbase: { name: 'Coinbase Pro', color: '#0052ff', needsPassphrase: true },
+    coinbase: { name: 'Coinbase', color: '#0052ff', needsPassphrase: true },
     kraken: { name: 'Kraken', color: '#663399', needsPassphrase: false },
     bitfinex: { name: 'Bitfinex', color: '#37a830', needsPassphrase: false },
     kucoin: { name: 'KuCoin', color: '#20d4a8', needsPassphrase: true },
@@ -212,9 +213,14 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
                 type="password"
                 value={credentials.passphrase || ''}
                 onChange={(e) => setCredentials({...credentials, passphrase: e.target.value})}
-                placeholder="Enter your passphrase"
+                placeholder={credentials.exchangeName === 'coinbase' ? 'Enter your API passphrase' : 'Enter your passphrase'}
                 required
               />
+              {credentials.exchangeName === 'coinbase' && (
+                <small className="form-help">
+                  Get your API credentials from <a href="https://exchange.coinbase.com/settings/api" target="_blank" rel="noopener noreferrer">exchange.coinbase.com/settings/api</a>
+                </small>
+              )}
             </div>
           )}
 

@@ -1,6 +1,12 @@
 import { Client, Environment } from 'squareup';
 import { PRICING_TIERS } from '../pricing';
 
+// Live Square checkout links for production
+const LIVE_CHECKOUT_LINKS = {
+  basic: 'https://square.link/u/FYrYvBjt',
+  premium: 'https://square.link/u/7xs2lxXZ'
+};
+
 interface SquareConfig {
   applicationId: string;
   accessToken: string;
@@ -14,141 +20,47 @@ export class SquarePaymentService {
 
   constructor() {
     this.config = {
-      applicationId: process.env.SQUARE_APPLICATION_ID || 'sandbox-sq0idb-your-app-id',
-      accessToken: process.env.SQUARE_ACCESS_TOKEN || 'sandbox-sq0atb-your-access-token',
-      environment: process.env.NODE_ENV === 'production' ? Environment.Production : Environment.Sandbox,
-      locationId: process.env.SQUARE_LOCATION_ID || 'your-location-id'
+      applicationId: process.env.SQUARE_APPLICATION_ID || '',
+      accessToken: process.env.SQUARE_ACCESS_TOKEN || '',
+      environment: Environment.Production, // Using production environment
+      locationId: process.env.SQUARE_LOCATION_ID || ''
     };
 
-    this.client = new Client({
-      accessToken: this.config.accessToken,
-      environment: this.config.environment,
-    });
-  }
-
-  // Create a checkout link for subscription
-  async createCheckoutLink(plan: 'basic' | 'premium', userId: number): Promise<string> {
-    try {
-      const planConfig = PRICING_TIERS[plan];
-      if (!planConfig) {
-        throw new Error('Invalid plan selected');
-      }
-
-      const checkoutApi = this.client.checkoutApi;
-      
-      const requestBody = {
-        idempotencyKey: `checkout_${userId}_${plan}_${Date.now()}`,
-        order: {
-          locationId: this.config.locationId,
-          lineItems: [
-            {
-              name: `XRP Army ${planConfig.name} - Monthly Subscription`,
-              quantity: '1',
-              // Square expects amounts in the smallest currency unit (cents)
-              variationName: `${planConfig.name} Plan`,
-              metadata: {
-                plan: plan,
-                userId: userId.toString(),
-                subscriptionType: 'monthly'
-              }
-            }
-          ]
-        },
-        checkoutOptions: {
-          allowTipping: false,
-          customFields: [
-            {
-              title: 'User ID',
-              value: userId.toString()
-            }
-          ],
-          subscriptionPlanId: plan === 'basic' ? 
-            process.env.SQUARE_BASIC_PLAN_ID : 
-            process.env.SQUARE_PREMIUM_PLAN_ID
-        },
-        redirectUrl: process.env.FRONTEND_URL + '/subscription/success',
-        merchantSupportEmail: process.env.SUPPORT_EMAIL || 'support@xrparmy.com'
-      };
-
-      const response = await checkoutApi.createPaymentLink(requestBody);
-      
-      if (response.result.paymentLink?.url) {
-        return response.result.paymentLink.url;
-      } else {
-        throw new Error('Failed to create checkout link');
-      }
-
-    } catch (error) {
-      console.error('Square checkout error:', error);
-      throw new Error('Failed to create payment link');
+    // Only initialize client if we have credentials for webhook processing
+    if (this.config.accessToken) {
+      this.client = new Client({
+        accessToken: this.config.accessToken,
+        environment: this.config.environment,
+      });
     }
   }
 
-  // Create subscription plans in Square (run this once to set up)
-  async createSubscriptionPlans() {
-    try {
-      const subscriptionsApi = this.client.subscriptionsApi;
-
-      // Basic Plan
-      const basicPlan = {
-        idempotencyKey: `plan_basic_${Date.now()}`,
-        object: {
-          type: 'CATALOG_SUBSCRIPTION_PLAN',
-          subscriptionPlanData: {
-            name: 'XRP Army Basic',
-            phases: [
-              {
-                cadence: 'MONTHLY',
-                periods: 1, // Recurring monthly
-                recurringPriceMoney: {
-                  amount: 999, // $9.99 in cents
-                  currency: 'USD'
-                }
-              }
-            ]
-          }
-        }
-      };
-
-      // Premium Plan  
-      const premiumPlan = {
-        idempotencyKey: `plan_premium_${Date.now()}`,
-        object: {
-          type: 'CATALOG_SUBSCRIPTION_PLAN',
-          subscriptionPlanData: {
-            name: 'XRP Army Premium with AI Signals',
-            phases: [
-              {
-                cadence: 'MONTHLY',
-                periods: 1, // Recurring monthly
-                recurringPriceMoney: {
-                  amount: 2000, // $20.00 in cents
-                  currency: 'USD'
-                }
-              }
-            ]
-          }
-        }
-      };
-
-      const catalogApi = this.client.catalogApi;
-      
-      const basicResponse = await catalogApi.upsertCatalogObject(basicPlan);
-      const premiumResponse = await catalogApi.upsertCatalogObject(premiumPlan);
-
-      console.log('✅ Subscription plans created in Square:');
-      console.log('Basic Plan ID:', basicResponse.result.catalogObject?.id);
-      console.log('Premium Plan ID:', premiumResponse.result.catalogObject?.id);
-
-      return {
-        basicPlanId: basicResponse.result.catalogObject?.id,
-        premiumPlanId: premiumResponse.result.catalogObject?.id
-      };
-
-    } catch (error) {
-      console.error('❌ Error creating subscription plans:', error);
-      throw error;
+  // Get live checkout link for subscription
+  getCheckoutLink(plan: 'basic' | 'premium', userId: number): string {
+    const checkoutLink = LIVE_CHECKOUT_LINKS[plan];
+    if (!checkoutLink) {
+      throw new Error('Invalid plan selected');
     }
+
+    console.log(`🔗 Directing user ${userId} to live Square checkout for ${plan} plan: ${checkoutLink}`);
+    return checkoutLink;
+  }
+
+  // Get subscription plan info
+  getPlanInfo(plan: 'basic' | 'premium') {
+    return {
+      ...PRICING_TIERS[plan],
+      checkoutLink: LIVE_CHECKOUT_LINKS[plan],
+      isLive: true
+    };
+  }
+
+  // Get all available plans with live checkout links
+  getAllPlans() {
+    return {
+      basic: this.getPlanInfo('basic'),
+      premium: this.getPlanInfo('premium')
+    };
   }
 
   // Process webhook from Square for subscription events

@@ -2,17 +2,35 @@
 // This avoids CORS issues by using the backend server to handle Square API calls
 
 export const SUBSCRIPTION_PLANS = {
-  premium: {
-    id: 'xrp-lieutenant-monthly',
-    name: 'XRP Lieutenant',
-    amount: 2000, // $20.00 in cents
-    interval: 'MONTHLY'
+  basic: {
+    id: 'xrp-basic-monthly',
+    name: 'XRP Army Basic',
+    amount: 999, // $9.99 in cents
+    interval: 'MONTHLY',
+    features: [
+      'Real-time XRP price tracking',
+      'Basic charts and indicators',
+      'Price alerts (up to 5)',
+      'Order book analysis',
+      'Volume tracking',
+      'Email support'
+    ]
   },
-  elite: {
-    id: 'xrp-general-monthly',
-    name: 'XRP General',
-    amount: 4900, // $49.00 in cents
-    interval: 'MONTHLY'
+  premium: {
+    id: 'xrp-premium-monthly',
+    name: 'XRP Army Premium with AI Signals',
+    amount: 2000, // $20.00 in cents
+    interval: 'MONTHLY',
+    features: [
+      'Everything in Basic plan',
+      'AI-powered trading signals',
+      'Advanced pattern recognition',
+      'Sentiment analysis',
+      'Unlimited price alerts',
+      'Whale alert notifications',
+      'API access',
+      'Priority support'
+    ]
   }
 };
 
@@ -51,7 +69,7 @@ class SimpleSquarePaymentService {
   }
 
   // Create a payment link using backend API - SIMPLIFIED VERSION
-  async createPaymentLink(planId: 'premium' | 'elite', userEmail: string): Promise<string> {
+  async createPaymentLink(planId: 'basic' | 'premium', userEmail: string): Promise<string> {
     const plan = SUBSCRIPTION_PLANS[planId];
     
     console.log('💳 SIMPLE Square Payment Link Request:');
@@ -61,7 +79,7 @@ class SimpleSquarePaymentService {
     // Determine backend URL
     const backendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://xrp-army-production.up.railway.app'
-      : 'http://localhost:5001';
+      : 'http://localhost:3001';
     
     try {
       const response = await fetch(`${backendUrl}/api/payment/create-payment-link`, {
