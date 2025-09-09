@@ -52,7 +52,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       plan: user.plan,
-      isPremium: user.is_premium
+      isActiveSubscription: user.is_active_subscription || user.is_premium
     };
 
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -67,7 +67,7 @@ export class AuthService {
     }
   }
 
-  static async signup(username: string, email: string, password: string, plan: 'free' | 'premium' | 'elite' = 'free'): Promise<AuthResponse> {
+  static async signup(username: string, email: string, password: string, plan: 'basic' | 'premium' = 'basic'): Promise<AuthResponse> {
     // Validation
     if (!username || username.length < 3) {
       throw new Error('Username must be at least 3 characters long');
@@ -95,50 +95,45 @@ export class AuthService {
     // Hash password
     const passwordHash = await this.hashPassword(password);
 
-    // Set up premium trial if applicable
-    const isPremium = plan !== 'free';
-    const trialEndsAt = isPremium ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : undefined; // 7 days
-
-    // Create user
+    // Create user data
     const userData = {
       username,
       email,
       password_hash: passwordHash,
       plan,
-      is_premium: isPremium,
-      trial_ends_at: trialEndsAt
+      is_active_subscription: false, // No free access - must subscribe
+      subscription_status: 'pending' as const,
+      subscription_ends_at: undefined,
+      subscription_id: undefined,
+      stripe_customer_id: undefined
     };
 
-    const user = await database.createUser(userData);
+    try {
+      const user = await database.createUser(userData);
+      const token = this.generateToken(user);
+      
+      console.log(`✅ User created: ${username} (${email}) - Plan: ${plan}`);
 
-    // Generate JWT token
-    const token = this.generateToken(user);
-    
-    // Create session
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    await database.createSession(user.id!, token, expiresAt);
-
-    console.log(`🚀 User ${username} signed up successfully with ${plan} plan`);
-
-    return {
-      user: {
-        id: user.id!,
-        username: user.username,
-        email: user.email,
-        plan: user.plan,
-        isPremium: user.is_premium,
-        trialEndsAt: user.trial_ends_at ? new Date(user.trial_ends_at).toISOString() : undefined
-      },
-      token,
-      expiresIn: JWT_EXPIRES_IN
-    };
+      return {
+        user: {
+          id: user.id!,
+          username: user.username,
+          email: user.email,
+          plan: user.plan,
+          isActiveSubscription: user.is_active_subscription || user.is_premium || false,
+          subscriptionStatus: user.subscription_status || 'pending',
+          subscriptionEndsAt: user.subscription_ends_at ? new Date(user.subscription_ends_at).toISOString() : undefined
+        },
+        token,
+        expiresIn: JWT_EXPIRES_IN
+      };
+    } catch (error: any) {
+      console.error('❌ User creation failed:', error);
+      throw new Error('Account creation failed');
+    }
   }
 
   static async signin(email: string, password: string): Promise<AuthResponse> {
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-
     // Get user by email
     const user = await database.getUserByEmail(email);
     if (!user) {
@@ -151,34 +146,23 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // Check if trial has expired for premium users
-    if (user.is_premium && user.trial_ends_at) {
-      const now = new Date();
-      const trialEnd = new Date(user.trial_ends_at);
-      
-      if (now > trialEnd && !user.subscription_id) {
-        // Trial expired, downgrade to free
-        await database.updateUser(user.id!, { 
-          plan: 'free', 
-          is_premium: false,
-          trial_ends_at: undefined
-        });
-        user.plan = 'free';
-        user.is_premium = false;
-        user.trial_ends_at = undefined;
-        
-        console.log(`⏰ User ${user.username}'s trial expired, downgraded to free plan`);
-      }
+    // Check subscription status (backwards compatibility)
+    const hasActiveSubscription = user.is_active_subscription || user.is_premium;
+    const subscriptionStatus = user.subscription_status || (user.is_premium ? 'active' : 'pending');
+
+    // Check if subscription has expired
+    const expirationDate = user.subscription_ends_at || user.trial_ends_at;
+    if (hasActiveSubscription && expirationDate && new Date(expirationDate) < new Date()) {
+      // Update expired subscription
+      await database.updateUser(user.id!, {
+        is_active_subscription: false,
+        subscription_status: 'expired'
+      });
     }
 
-    // Generate new JWT token
     const token = this.generateToken(user);
     
-    // Create session
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    await database.createSession(user.id!, token, expiresAt);
-
-    console.log(`✅ User ${user.username} signed in successfully`);
+    console.log(`✅ User signed in: ${user.username} (${email})`);
 
     return {
       user: {
@@ -186,8 +170,9 @@ export class AuthService {
         username: user.username,
         email: user.email,
         plan: user.plan,
-        isPremium: user.is_premium,
-        trialEndsAt: user.trial_ends_at ? new Date(user.trial_ends_at).toISOString() : undefined
+        isActiveSubscription: hasActiveSubscription || false,
+        subscriptionStatus,
+        subscriptionEndsAt: expirationDate ? new Date(expirationDate).toISOString() : undefined
       },
       token,
       expiresIn: JWT_EXPIRES_IN
@@ -197,94 +182,93 @@ export class AuthService {
   static async logout(token: string): Promise<void> {
     try {
       await database.deleteSession(token);
-      console.log('✅ User logged out successfully');
+      console.log('✅ User logged out');
     } catch (error) {
-      console.error('❌ Error during logout:', error);
+      console.error('❌ Logout error:', error);
       throw new Error('Logout failed');
     }
   }
 
   static async validateSession(token: string): Promise<User | null> {
     try {
-      // Verify JWT token
-      const decoded = this.verifyToken(token);
-      if (!decoded) {
+      const payload = this.verifyToken(token);
+      if (!payload || !payload.id) {
         return null;
       }
 
-      // Check session in database
-      const user = await database.getUserWithSession(token);
+      const user = await database.getUserById(payload.id);
+      if (!user) {
+        return null;
+      }
+
+      // Check if subscription has expired
+      const hasActiveSubscription = user.is_active_subscription || user.is_premium;
+      const expirationDate = user.subscription_ends_at || user.trial_ends_at;
+      
+      if (hasActiveSubscription && expirationDate && new Date(expirationDate) < new Date()) {
+        // Update expired subscription
+        await database.updateUser(user.id!, {
+          is_active_subscription: false,
+          subscription_status: 'expired'
+        });
+        
+        // Return updated user data
+        return await database.getUserById(user.id!);
+      }
+
       return user;
     } catch (error) {
       console.error('❌ Session validation failed:', error);
       return null;
     }
   }
+
+  // Refresh token (extend expiration)
+  static async refreshToken(token: string): Promise<string | null> {
+    try {
+      const user = await this.validateSession(token);
+      if (!user) {
+        return null;
+      }
+
+      const newToken = this.generateToken(user);
+      console.log(`🔄 Token refreshed for user: ${user.username}`);
+      return newToken;
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      return null;
+    }
+  }
 }
 
-// Middleware for protecting routes
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
+// Middleware to authenticate requests
+export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
   try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access token required'
+      });
+    }
+
     const user = await AuthService.validateSession(token);
     if (!user) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error('❌ Token authentication error:', error);
-    return res.status(403).json({ error: 'Invalid token' });
-  }
-};
-
-// Middleware for premium-only routes
-export const requirePremium = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  if (!req.user.is_premium) {
-    return res.status(403).json({ 
-      error: 'Premium subscription required',
-      upgrade: true,
-      userPlan: req.user.plan
+    console.error('❌ Authentication middleware error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Authentication failed'
     });
   }
-
-  next();
-};
-
-// Middleware for checking trial status
-export const checkTrialStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user) {
-    return next();
-  }
-
-  if (req.user.is_premium && req.user.trial_ends_at) {
-    const now = new Date();
-    const trialEnd = new Date(req.user.trial_ends_at);
-    
-    if (now > trialEnd && !req.user.subscription_id) {
-      // Trial expired, update user
-      const updatedUser = await database.updateUser(req.user.id!, {
-        plan: 'free',
-        is_premium: false,
-        trial_ends_at: undefined
-      });
-      
-      if (updatedUser) {
-        req.user = updatedUser;
-      }
-    }
-  }
-
-  next();
-};
+}

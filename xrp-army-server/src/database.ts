@@ -8,11 +8,14 @@ export interface User {
   email: string;
   password_hash: string;
   plan: 'basic' | 'premium';
-  is_active_subscription: boolean;
-  subscription_status: 'active' | 'cancelled' | 'expired' | 'pending';
+  is_active_subscription?: boolean;
+  subscription_status?: 'active' | 'cancelled' | 'expired' | 'pending';
   subscription_ends_at?: Date;
   subscription_id?: string;
   stripe_customer_id?: string;
+  // Legacy fields for backwards compatibility
+  is_premium?: boolean;
+  trial_ends_at?: Date;
   created_at: Date;
   updated_at: Date;
 }

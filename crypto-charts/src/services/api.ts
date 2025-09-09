@@ -13,10 +13,10 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  plan: 'free' | 'premium' | 'elite';
-  isPremium: boolean;
-  trialEndsAt?: string;
-  trialDaysRemaining?: number;
+  plan: 'basic' | 'premium';
+  isActiveSubscription: boolean;
+  subscriptionStatus: string;
+  subscriptionEndsAt?: string;
   subscriptionId?: string;
   joinedAt?: string;
 }
@@ -68,7 +68,7 @@ class ApiService {
     username: string, 
     email: string, 
     password: string, 
-    plan: 'free' | 'premium' | 'elite' = 'free'
+    plan: 'basic' | 'premium' = 'basic'
   ): Promise<ApiResponse<AuthResponse>> {
     const response = await this.makeRequest<AuthResponse>('/auth/signup', {
       method: 'POST',

@@ -13,7 +13,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium' | 'elite'>('free');
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -30,59 +30,41 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
 
   const plans = [
     {
-      id: 'free',
-      name: 'XRP Soldier',
-      price: '$0',
-      period: 'Forever',
+      id: 'basic',
+      name: 'XRP Army Basic',
+      price: '$9.99',
+      period: '/month',
       features: [
-        '✅ Real-time XRP price charts',
-        '✅ Basic technical indicators',
-        '✅ 1-hour delayed signals',
-        '✅ Community chat access',
+        '✅ Real-time XRP price tracking',
+        '✅ Basic charts and indicators',
+        '✅ Price alerts (up to 5)',
+        '✅ Order book analysis',
+        '✅ Volume tracking',
+        '✅ Email support',
         '❌ AI Trading Signals',
-        '❌ Advanced indicators',
-        '❌ Price alerts',
-        '❌ Portfolio tracking'
+        '❌ Advanced analytics'
       ],
-      badge: 'FREE',
-      color: '#6b7280'
+      badge: 'ESSENTIAL',
+      color: '#4CAF50'
     },
     {
       id: 'premium',
-      name: 'XRP Lieutenant',
+      name: 'XRP Army Premium',
       price: '$20',
       period: '/month',
       features: [
-        '✅ Everything in Soldier',
-        '✅ Real-time AI signals',
-        '✅ Advanced indicators',
+        '✅ Everything in Basic',
+        '✅ AI-powered trading signals',
+        '✅ Advanced pattern recognition',
+        '✅ Sentiment analysis',
         '✅ Unlimited price alerts',
-        '✅ Portfolio tracking',
-        '✅ Priority support',
-        '✅ Backtesting tools',
-        '❌ API access'
+        '✅ Whale alert notifications',
+        '✅ API access',
+        '✅ Priority support'
       ],
       badge: 'POPULAR',
-      color: '#00AAE4',
+      color: '#FFD700',
       popular: true
-    },
-    {
-      id: 'elite',
-      name: 'XRP General',
-      price: '$49',
-      period: '/month',
-      features: [
-        '✅ Everything in Lieutenant',
-        '✅ API access',
-        '✅ Custom indicators',
-        '✅ Whale alerts',
-        '✅ 1-on-1 strategy sessions',
-        '✅ Early access features',
-        '✅ White-label options',
-        '✅ Institutional tools'
-      ],
-      badge: 'ELITE',
-      color: '#fbbf24'
     }
   ];
 
@@ -93,7 +75,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     if (signupPlan) {
       console.log('✅ Found signup plan, switching to signup mode with plan:', signupPlan);
       setMode('signup');
-      setSelectedPlan(signupPlan as 'free' | 'premium' | 'elite');
+      setSelectedPlan(signupPlan as 'basic' | 'premium');
       localStorage.removeItem('xrp_signup_plan'); // Clear the flag
     }
   }, []);
@@ -237,13 +219,11 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       return;
     }
 
-    // For paid plans, show payment modal
-    if (selectedPlan !== 'free') {
-      setShowPaymentModal(true);
-      return;
-    }
+    // All plans are paid now - show payment modal
+    setShowPaymentModal(true);
+    return;
     
-    // For free plan, proceed with signup
+    // No free signup anymore - all plans require payment
     setLoading(true);
     
     try {
@@ -253,7 +233,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       
       if (response.success && response.data) {
         console.log('✅ Signup successful:', response.message);
-        onAuthSuccess(response.data.user);
+        onAuthSuccess(response.data!.user);
       } else {
         setErrors([response.error || 'Signup failed']);
       }
@@ -577,7 +557,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
                   <span className="loading-spinner">⌛</span>
                 ) : (
                   <>
-                    {selectedPlan === 'free' ? 'Start Free Forever' : 'Continue to Payment'}
+                    {'Continue to Payment'}
                     <span className="button-arrow">→</span>
                   </>
                 )}
@@ -619,7 +599,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        planId={selectedPlan as 'premium' | 'elite'}
+        planId={selectedPlan}
         userEmail={email}
         userName={username}
         onSuccess={handlePaymentSuccess}

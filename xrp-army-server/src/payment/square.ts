@@ -1,4 +1,5 @@
-import { Client, Environment } from 'squareup';
+// Square payment service - using direct checkout links
+// import { Client, Environment } from 'squareup';
 import { PRICING_TIERS } from '../pricing';
 
 // Live Square checkout links for production
@@ -7,32 +8,9 @@ const LIVE_CHECKOUT_LINKS = {
   premium: 'https://square.link/u/7xs2lxXZ'
 };
 
-interface SquareConfig {
-  applicationId: string;
-  accessToken: string;
-  environment: Environment;
-  locationId: string;
-}
-
 export class SquarePaymentService {
-  private client: Client;
-  private config: SquareConfig;
-
   constructor() {
-    this.config = {
-      applicationId: process.env.SQUARE_APPLICATION_ID || '',
-      accessToken: process.env.SQUARE_ACCESS_TOKEN || '',
-      environment: Environment.Production, // Using production environment
-      locationId: process.env.SQUARE_LOCATION_ID || ''
-    };
-
-    // Only initialize client if we have credentials for webhook processing
-    if (this.config.accessToken) {
-      this.client = new Client({
-        accessToken: this.config.accessToken,
-        environment: this.config.environment,
-      });
-    }
+    // Using direct checkout links instead of API integration
   }
 
   // Get live checkout link for subscription
@@ -154,7 +132,7 @@ export class SquarePaymentService {
     const userId = data.object?.source?.name || data.object?.metadata?.userId;
     if (userId) {
       await database.updateUser(parseInt(userId), {
-        subscription_status: 'payment_failed'
+        subscription_status: 'cancelled' // payment_failed maps to cancelled
       });
     }
   }
