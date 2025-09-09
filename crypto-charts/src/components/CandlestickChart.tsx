@@ -38,7 +38,8 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
       return;
     }
 
-    // Create the trading chart
+    try {
+      // Create the trading chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: '#161a25' },
@@ -220,13 +221,19 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      chart.remove();
+      if (chart) {
+        chart.remove();
+      }
     };
+    } catch (error) {
+      console.error('Error creating chart:', error);
+    }
   }, [chartType]); // Recreate chart when chart type changes
 
   useEffect(() => {
     if (candlestickSeriesRef.current && data.length > 0) {
-      console.log('📊 Chart data sample:', data.slice(0, 3));
+      try {
+        console.log('📊 Chart data sample:', data.slice(0, 3));
       
       let formattedData: any[];
       
@@ -296,6 +303,9 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
           to: formattedData[lastIndex].time
         });
       }
+      } catch (error) {
+        console.error('Error setting chart data:', error);
+      }
     }
   }, [data, chartType]);
 
@@ -303,17 +313,29 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
   useEffect(() => {
     if (!chartRef.current || data.length < 50) return; // Need enough data for indicators
     
-    // Remove existing indicator series
-    Object.values(indicatorSeriesRef.current).forEach((series: any) => {
-      chartRef.current?.removeSeries(series);
-    });
-    indicatorSeriesRef.current = {};
+    // Extra check to ensure chart is still valid
+    if (!chartRef.current || typeof chartRef.current.removeSeries !== 'function') {
+      console.warn('Chart reference is invalid, skipping indicator update');
+      return;
+    }
     
-    // Add new indicator series
-    indicators.forEach(indicator => {
+    try {
+      // Remove existing indicator series
+      Object.values(indicatorSeriesRef.current).forEach((series: any) => {
+        try {
+          chartRef.current?.removeSeries(series);
+        } catch (error) {
+          console.error('Error removing series:', error);
+        }
+      });
+      indicatorSeriesRef.current = {};
+      
+      // Add new indicator series
+      indicators.forEach(indicator => {
       if (indicator === 'RSI') {
-        const rsiData = calculateRSI(data);
-        if (rsiData.length > 0) {
+        try {
+          const rsiData = calculateRSI(data);
+          if (rsiData.length > 0 && rsiData.every(d => typeof d.value === 'number' && !isNaN(d.value))) {
           const rsiSeries = (chartRef.current as any).addLineSeries({
             color: '#ff9800',
             lineWidth: 2,
@@ -367,12 +389,20 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
           indicatorSeriesRef.current['RSI'] = rsiSeries;
           indicatorSeriesRef.current['RSI_Upper'] = rsiUpperLine;
           indicatorSeriesRef.current['RSI_Lower'] = rsiLowerLine;
+          }
+        } catch (error) {
+          console.error('Error adding RSI indicator:', error);
         }
       }
       
       if (indicator === 'MACD') {
-        const macdData = calculateMACD(data);
-        if (macdData.length > 0) {
+        try {
+          const macdData = calculateMACD(data);
+          if (macdData.length > 0 && macdData.every(d => 
+            typeof d.macd === 'number' && !isNaN(d.macd) && 
+            typeof d.signal === 'number' && !isNaN(d.signal) && 
+            typeof d.histogram === 'number' && !isNaN(d.histogram)
+          )) {
           // MACD Line
           const macdSeries = (chartRef.current as any).addLineSeries({
             color: '#2962ff',
@@ -435,12 +465,20 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
           indicatorSeriesRef.current['MACD_Signal'] = signalSeries;
           indicatorSeriesRef.current['MACD_Histogram'] = histogramSeries;
           indicatorSeriesRef.current['MACD_Zero'] = zeroLine;
+          }
+        } catch (error) {
+          console.error('Error adding MACD indicator:', error);
         }
       }
       
       if (indicator === 'Bollinger') {
-        const bollingerData = calculateBollingerBands(data);
-        if (bollingerData.length > 0) {
+        try {
+          const bollingerData = calculateBollingerBands(data);
+          if (bollingerData.length > 0 && bollingerData.every(d => 
+            typeof d.upper === 'number' && !isNaN(d.upper) && 
+            typeof d.middle === 'number' && !isNaN(d.middle) && 
+            typeof d.lower === 'number' && !isNaN(d.lower)
+          )) {
           // Upper Band
           const upperBandSeries = (chartRef.current as any).addLineSeries({
             color: 'rgba(156, 39, 176, 0.8)',
@@ -497,9 +535,17 @@ const CandlestickChart: React.FC<ChartProps> = ({ symbol, data, chartType, timef
           indicatorSeriesRef.current['Bollinger_Middle'] = middleBandSeries;
           indicatorSeriesRef.current['Bollinger_Lower'] = lowerBandSeries;
           indicatorSeriesRef.current['Bollinger_Fill'] = fillSeries;
+          }
+        } catch (error) {
+          console.error('Error adding Bollinger Bands indicator:', error);
         }
       }
     });
+    } catch (error) {
+      console.error('Error updating indicators:', error);
+      // Clear indicator series on error to prevent chart from breaking
+      indicatorSeriesRef.current = {};
+    }
   }, [data, indicators]);
 
   // Handle candlestick pattern detection and visualization
