@@ -4,7 +4,11 @@ import http from 'http';
 import { Server } from 'socket.io';
 import WebSocket from 'ws';
 import authRoutes from './routes/auth';
+import dataRoutes from './routes/data';
 import { database } from './database';
+import { authenticateToken } from './auth';
+import { requireActiveSubscription, requirePremium } from './middleware/subscription';
+import { PRICING_TIERS } from './pricing';
 // import { ExchangeManager } from './exchangeManager';
 
 const app = express();
@@ -22,12 +26,26 @@ app.use(express.json());
 // Authentication routes
 app.use('/api/auth', authRoutes);
 
-// Health check endpoint
+// Data routes (requires subscription)
+app.use('/api/data', dataRoutes);
+
+// Health check endpoint - public
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     message: 'XRP Terminal API is running',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Pricing endpoint - public
+app.get('/api/pricing', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      plans: PRICING_TIERS,
+      message: 'No free trials. Subscription required for platform access.'
+    }
   });
 });
 

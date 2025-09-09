@@ -18,8 +18,9 @@ export interface AuthResponse {
     username: string;
     email: string;
     plan: string;
-    isPremium: boolean;
-    trialEndsAt?: string;
+    isActiveSubscription: boolean;
+    subscriptionStatus: string;
+    subscriptionEndsAt?: string;
   };
   token: string;
   expiresIn: string;

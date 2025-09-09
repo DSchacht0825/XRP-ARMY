@@ -7,10 +7,12 @@ export interface User {
   username: string;
   email: string;
   password_hash: string;
-  plan: 'free' | 'premium' | 'elite';
-  is_premium: boolean;
-  trial_ends_at?: Date;
+  plan: 'basic' | 'premium';
+  is_active_subscription: boolean;
+  subscription_status: 'active' | 'cancelled' | 'expired' | 'pending';
+  subscription_ends_at?: Date;
   subscription_id?: string;
+  stripe_customer_id?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -46,10 +48,12 @@ class Database {
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'premium', 'elite')),
-        is_premium BOOLEAN DEFAULT false,
-        trial_ends_at DATETIME,
+        plan TEXT DEFAULT 'basic' CHECK (plan IN ('basic', 'premium')),
+        is_active_subscription BOOLEAN DEFAULT false,
+        subscription_status TEXT DEFAULT 'pending' CHECK (subscription_status IN ('active', 'cancelled', 'expired', 'pending')),
+        subscription_ends_at DATETIME,
         subscription_id TEXT,
+        stripe_customer_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -118,18 +122,20 @@ class Database {
   // User methods
   public async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     const sql = `
-      INSERT INTO users (username, email, password_hash, plan, is_premium, trial_ends_at, subscription_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (username, email, password_hash, plan, is_active_subscription, subscription_status, subscription_ends_at, subscription_id, stripe_customer_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     const params = [
       userData.username,
       userData.email,
       userData.password_hash,
-      userData.plan,
-      userData.is_premium,
-      userData.trial_ends_at,
-      userData.subscription_id
+      userData.plan || 'basic',
+      userData.is_active_subscription || false,
+      userData.subscription_status || 'pending',
+      userData.subscription_ends_at,
+      userData.subscription_id,
+      userData.stripe_customer_id
     ];
 
     try {
