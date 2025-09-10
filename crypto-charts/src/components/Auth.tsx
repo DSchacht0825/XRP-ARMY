@@ -255,7 +255,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       
       if (response.success && response.data) {
         console.log('✅ Signup with payment successful');
-        alert(`🚀 Welcome to XRP ${selectedPlan === 'premium' ? 'Lieutenant' : 'General'}!`);
+        alert(`🚀 Welcome to XRP Army ${selectedPlan === 'premium' ? 'Premium' : 'Basic'}!`);
         onAuthSuccess(response.data.user);
       } else {
         setErrors([response.error || 'Signup failed']);

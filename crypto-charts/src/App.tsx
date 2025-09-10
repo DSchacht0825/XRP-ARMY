@@ -208,16 +208,14 @@ const App: React.FC = () => {
         <div className="causory-crypto-title">
           <h2>The Ultimate XRP Trading Platform</h2>
           <p className="xrp-tagline">
-            {user?.plan === 'elite' ? '⭐ XRP General' : 
-             user?.plan === 'premium' ? '💎 XRP Lieutenant' : 
-             '🛡️ XRP Soldier'} | {user?.username || user?.email}
+            {user?.plan === 'premium' ? '💎 XRP Premium Member' : 
+             '🛡️ XRP Basic Member'} | {user?.username || user?.email}
           </p>
         </div>
         <div className="user-controls">
           <span className={`user-plan-badge ${user?.plan || 'free'}`}>
-            {user?.plan === 'elite' ? 'ELITE' : 
-             user?.plan === 'premium' ? 'PREMIUM' : 
-             'FREE'}
+            {user?.plan === 'premium' ? 'PREMIUM' : 
+             'BASIC'}
           </span>
           <button onClick={handleLogout} className="logout-btn">
             Logout
