@@ -347,9 +347,15 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
           <span className="subscription-info">Premium Active</span>
         </div>
         <div className="premium-features-active">
-          <span>🤖 AI Signals</span>
-          <span>📊 Advanced Analytics</span>
-          <span>⚡ Real-time Updates</span>
+          <button className="feature-btn active" onClick={() => window.scrollTo({top: 400, behavior: 'smooth'})}>
+            🤖 AI Signals
+          </button>
+          <button className="feature-btn active" onClick={() => window.scrollTo({top: 600, behavior: 'smooth'})}>
+            📊 Advanced Analytics
+          </button>
+          <button className="feature-btn active" onClick={() => window.scrollTo({top: 800, behavior: 'smooth'})}>
+            ⚡ Real-time Updates
+          </button>
         </div>
       </div>
 
