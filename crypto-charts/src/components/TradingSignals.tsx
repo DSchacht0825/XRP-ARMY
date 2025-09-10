@@ -596,6 +596,84 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
         )}
       </div>
       
+      {/* Comprehensive Trading Disclaimer */}
+      <div className="trading-disclaimer">
+        <div className="disclaimer-header">
+          <h3>⚠️ Important Trading Risk Disclaimer</h3>
+        </div>
+        
+        <div className="disclaimer-content">
+          <div className="disclaimer-section">
+            <h4>🚨 No Financial Advice</h4>
+            <p>
+              The AI-generated signals and analysis provided by XRP Terminal are for <strong>educational and informational purposes only</strong>. 
+              This content does not constitute financial, investment, trading, or other types of advice or recommendations. 
+              Always consult with qualified financial professionals before making any investment decisions.
+            </p>
+          </div>
+
+          <div className="disclaimer-section">
+            <h4>📊 AI Limitations & Market Volatility</h4>
+            <p>
+              Our AI system analyzes market trends and technical indicators, but <strong>cannot guarantee future market movements</strong>. 
+              Cryptocurrency markets are extremely volatile and unpredictable. Past performance of signals does not indicate future results. 
+              Market conditions can change rapidly, making previous patterns irrelevant.
+            </p>
+          </div>
+
+          <div className="disclaimer-section">
+            <h4>💸 Risk of Loss</h4>
+            <p>
+              Trading cryptocurrencies involves substantial risk of loss and may not be suitable for all investors. 
+              You may lose some or all of your invested capital. <strong>Never invest more than you can afford to lose</strong>. 
+              Consider your investment objectives, level of experience, and risk appetite before trading.
+            </p>
+          </div>
+
+          <div className="disclaimer-section">
+            <h4>🛡️ No Liability</h4>
+            <p>
+              XRP Terminal, its developers, and affiliates <strong>cannot be held responsible for any trading losses</strong> 
+              or damages resulting from the use of our AI signals, analysis, or platform. Users trade at their own risk 
+              and are solely responsible for their trading decisions and outcomes.
+            </p>
+          </div>
+
+          <div className="disclaimer-section">
+            <h4>🎯 Educational Purpose</h4>
+            <p>
+              Our platform is designed to help users learn about technical analysis and market trends. 
+              All signals and analysis should be used as learning tools alongside your own research and due diligence. 
+              <strong>Always conduct your own analysis</strong> before making any trading decisions.
+            </p>
+          </div>
+
+          <div className="disclaimer-section">
+            <h4>🌐 Regulatory Compliance</h4>
+            <p>
+              Cryptocurrency trading may be restricted or prohibited in your jurisdiction. 
+              Users are responsible for ensuring compliance with all applicable laws and regulations. 
+              XRP Terminal does not provide legal or regulatory advice.
+            </p>
+          </div>
+
+          <div className="disclaimer-footer">
+            <p className="disclaimer-final">
+              <strong>By using XRP Terminal's AI signals and analysis, you acknowledge that you have read, 
+              understood, and agree to this disclaimer. You accept full responsibility for your trading 
+              decisions and understand the inherent risks involved in cryptocurrency trading.</strong>
+            </p>
+            
+            <div className="disclaimer-badges">
+              <span className="risk-badge high">High Risk Investment</span>
+              <span className="risk-badge volatile">Extremely Volatile</span>
+              <span className="risk-badge educational">Educational Only</span>
+              <span className="risk-badge no-guarantee">No Guarantees</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Direct payment redirect - no modal needed */}
     </div>
   );
