@@ -725,3 +725,49 @@
     align-items: center;
   }
 }
+
+/* Auth Header Actions */
+.auth-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: 20px;
+}
+
+.signin-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 12px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.signin-link:hover {
+  color: #00AAE4;
+  background: rgba(0, 170, 228, 0.1);
+  transform: translateY(-1px);
+}
+
+.signin-link strong {
+  color: #00AAE4;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .auth-header-actions {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .signin-link {
+    text-align: center;
+  }
+}

@@ -502,8 +502,21 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
 
         {mode === 'plan' && (
           <div className="plan-selection">
-            <h2>Choose Your XRP Army Rank</h2>
-            <p className="plan-subtitle">Choose your plan to get started</p>
+            <div className="auth-header-actions">
+              <div>
+                <h2>Choose Your XRP Army Rank</h2>
+                <p className="plan-subtitle">Choose your plan to get started</p>
+              </div>
+              <button
+                className="signin-link"
+                onClick={() => {
+                  setMode('signin');
+                  setErrors([]);
+                }}
+              >
+                Already have an account? <strong>Sign In →</strong>
+              </button>
+            </div>
             
             <div className="plans-grid">
               {plans.map((plan) => (
