@@ -273,11 +273,29 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
     <div className="auth-container">
       <div className="auth-wrapper">
         <div className="auth-header">
-          <h1 className="auth-logo">
-            <span className="xrp-icon">🚀</span>
-            XRP TERMINAL
-          </h1>
-          <p className="auth-tagline">Join the XRP Army Trading Revolution</p>
+          <div className="auth-header-top">
+            <div className="auth-branding">
+              <h1 className="auth-logo">
+                <span className="xrp-icon">🚀</span>
+                XRP TERMINAL
+              </h1>
+              <p className="auth-tagline">Join the XRP Army Trading Revolution</p>
+            </div>
+            
+            {/* Login Button in Header */}
+            {mode !== 'signin' && (
+              <button
+                className="header-login-btn"
+                onClick={() => {
+                  setMode('signin');
+                  setErrors([]);
+                }}
+              >
+                <span className="login-icon">🔑</span>
+                Login
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Live XRP Preview Chart */}
