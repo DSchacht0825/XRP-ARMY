@@ -27,8 +27,11 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   console.log('🔍 Is premium:', isPremium);
   console.log('🔍 User isActiveSubscription:', user?.isActiveSubscription);
   
-  // Enhanced premium detection
-  const hasActivePremium = isPremium || user?.plan === 'premium' || user?.isActiveSubscription;
+  // Admin override for owner access - bypasses payment
+  const isAdminUser = user?.email === 'schacht.dan@gmail.com';
+  
+  // Enhanced premium detection with admin override
+  const hasActivePremium = isAdminUser || isPremium || user?.plan === 'premium' || user?.isActiveSubscription;
 
   useEffect(() => {
     // Generate initial professional signals
