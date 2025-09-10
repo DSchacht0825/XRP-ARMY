@@ -3,6 +3,7 @@ import { Portfolio as PortfolioType, PortfolioSummary, Transaction } from '../ty
 import { PortfolioCalculator } from '../utils/portfolioCalculations';
 import ExchangeConnection from './ExchangeConnection';
 import axios from 'axios';
+import { API_BASE_URL } from '../services/api';
 
 interface PortfolioProps {
   currentPrices: { [symbol: string]: number };
@@ -57,7 +58,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ currentPrices, user }) => {
 
     setSyncLoading(true);
     try {
-      const response = await axios.post(`http://localhost:5001/api/exchange/sync/${userId}`);
+      const response = await axios.post(`${API_BASE_URL}/exchange/sync/${userId}`);
       
       if (response.data.success) {
         const { balances, trades } = response.data.data;

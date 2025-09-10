@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../services/api';
 
 interface ExchangeCredentials {
   exchangeName: 'binance' | 'coinbase' | 'kraken' | 'bitfinex' | 'kucoin';
@@ -35,7 +36,7 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
 
   const checkConnectionStatus = async () => {
     try {
-      const response = await axios.get(`http://localhost:5001/api/exchange/status/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/exchange/status/${userId}`);
       if (response.data.success) {
         setIsConnected(response.data.data.connected);
         setConnectedExchange(response.data.data.exchange);
@@ -62,7 +63,7 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5001/api/exchange/connect', {
+      const response = await axios.post(`${API_BASE_URL}/exchange/connect`, {
         userId,
         credentials
       });
@@ -97,7 +98,7 @@ const ExchangeConnection: React.FC<ExchangeConnectionProps> = ({ onConnectionCha
     }
 
     try {
-      const response = await axios.delete(`http://localhost:5001/api/exchange/disconnect/${userId}`);
+      const response = await axios.delete(`${API_BASE_URL}/exchange/disconnect/${userId}`);
       
       if (response.data.success) {
         setIsConnected(false);

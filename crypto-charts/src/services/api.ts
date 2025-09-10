@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
+export const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://api.edgexrp.com/api'
   : 'http://localhost:5001/api';
 
