@@ -12,30 +12,39 @@ export interface TradingSignal {
   technicalScore: number;
   indicators: {
     rsi: { value: number; signal: 'oversold' | 'overbought' | 'neutral' };
-    macd: { signal: 'bullish' | 'bearish' | 'neutral'; histogram: number };
-    sma: { trend: 'up' | 'down' | 'sideways'; strength: number };
-    volume: { trend: 'increasing' | 'decreasing' | 'normal' };
-    support: number;
-    resistance: number;
+    macd: { signal: 'bullish' | 'bearish' | 'neutral'; histogram?: number };
+    sma: { trend: 'bullish' | 'bearish' | 'sideways' | 'up' | 'down'; strength?: number };
+    volume?: { trend: 'increasing' | 'decreasing' | 'normal' };
+    support?: number;
+    resistance?: number;
   };
   
   // AI Analysis
   aiScore: number;
   aiReasons: string[];
-  marketSentiment: 'bullish' | 'bearish' | 'neutral';
+  marketSentiment?: 'bullish' | 'bearish' | 'neutral';
   xrpArmySentiment?: string; // XRP Army community sentiment
   
   // Price Predictions
   predictions: {
     shortTerm: { timeframe: '1h' | '4h' | '1d'; target: number; probability: number };
-    mediumTerm: { timeframe: '3d' | '1w'; target: number; probability: number };
-    longTerm: { timeframe: '1m' | '3m'; target: number; probability: number };
+    mediumTerm: { timeframe: '3d' | '1w' | '24h'; target: number; probability: number };
+    longTerm?: { timeframe: '1m' | '3m'; target: number; probability: number };
   };
   
   // Risk Management
   stopLoss?: number;
   takeProfit?: number;
   riskReward: number;
+  
+  // Professional AI Features
+  strategy?: string; // 'momentum', 'meanReversion', 'breakout', 'volumeProfile'
+  marketRegime?: {
+    trend: 'bullish' | 'bearish' | 'sideways';
+    volatility: 'low' | 'medium' | 'high';
+    volume: 'low' | 'medium' | 'high';
+    confidence: number;
+  };
   
   // Metadata
   accuracy?: number; // Historical accuracy of similar signals
@@ -60,14 +69,17 @@ export interface SignalPerformance {
 export interface SignalStats {
   totalSignals: number;
   activeSignals: number;
-  accuracy: number;
-  averageReturn: number;
+  successfulSignals?: number;
   winRate: number;
-  bestPerformer: string;
-  worstPerformer: string;
-  totalProfit: number;
-  signalsToday: number;
-  signalsThisWeek: number;
+  avgConfidence?: number;
+  profitability?: number;
+  accuracy?: number;
+  averageReturn?: number;
+  bestPerformer?: string;
+  worstPerformer?: string;
+  totalProfit?: number;
+  signalsToday?: number;
+  signalsThisWeek?: number;
 }
 
 export interface MarketAnalysis {

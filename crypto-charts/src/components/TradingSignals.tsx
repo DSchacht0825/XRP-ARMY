@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TradingSignal, SignalStats } from '../types/signals';
-import { AISignalGenerator } from '../utils/aiSignalGenerator';
+import { ProfessionalAISignals } from '../utils/professionalAISignals';
 
 interface TradingSignalsProps {
   currentPrices: { [symbol: string]: number };
@@ -31,26 +31,26 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   const hasActivePremium = isPremium || user?.plan === 'premium' || user?.isActiveSubscription;
 
   useEffect(() => {
-    // Generate initial signals
+    // Generate initial professional signals
     if (Object.keys(marketData).length > 0) {
-      AISignalGenerator.generateSignalsForMarket(marketData);
+      ProfessionalAISignals.generateSignalsForMarket(marketData);
       loadSignals();
     }
 
-    // Update signals every 5 minutes
+    // Update signals every 10 minutes (professional signals need more time to develop)
     const interval = setInterval(() => {
       if (Object.keys(marketData).length > 0) {
-        AISignalGenerator.generateSignalsForMarket(marketData);
+        ProfessionalAISignals.generateSignalsForMarket(marketData);
         loadSignals();
       }
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [marketData]);
 
   const loadSignals = () => {
-    const allSignals = AISignalGenerator.getSignals();
-    const signalStats = AISignalGenerator.getSignalStats();
+    const allSignals = ProfessionalAISignals.getSignals();
+    const signalStats = ProfessionalAISignals.getSignalStats();
     
     setSignals(allSignals);
     setStats(signalStats);
@@ -486,6 +486,37 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
                     <span className="value">1:{signal.riskReward}</span>
                   </div>
                 </div>
+
+                {/* Professional AI Strategy & Market Regime */}
+                {signal.strategy && (
+                  <div className="professional-ai-info">
+                    <div className="strategy-info">
+                      <span className="strategy-label">Strategy:</span>
+                      <span className={`strategy-badge ${signal.strategy}`}>
+                        {signal.strategy === 'momentum' ? '🚀 Momentum' :
+                         signal.strategy === 'meanReversion' ? '🔄 Mean Reversion' :
+                         signal.strategy === 'breakout' ? '💥 Breakout' :
+                         signal.strategy === 'volumeProfile' ? '📊 Volume Profile' :
+                         signal.strategy}
+                      </span>
+                    </div>
+                    {signal.marketRegime && (
+                      <div className="market-regime">
+                        <span className="regime-label">Market:</span>
+                        <span className={`regime-badge ${signal.marketRegime.trend}`}>
+                          {signal.marketRegime.trend === 'bullish' ? '📈 Bullish' :
+                           signal.marketRegime.trend === 'bearish' ? '📉 Bearish' :
+                           '📊 Sideways'}
+                        </span>
+                        <span className={`volatility-badge ${signal.marketRegime.volatility}`}>
+                          {signal.marketRegime.volatility === 'high' ? '⚡ High Vol' :
+                           signal.marketRegime.volatility === 'medium' ? '〰️ Med Vol' :
+                           '😴 Low Vol'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="signal-analysis">
                   <div className="technical-scores">
