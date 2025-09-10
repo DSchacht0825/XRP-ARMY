@@ -1,0 +1,23 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="32" fill="#1a1a1a"/>
+  <circle cx="32" cy="32" r="30" fill="none" stroke="#007AFF" stroke-width="2"/>
+  
+  <!-- XRP Symbol -->
+  <g transform="translate(16, 16)">
+    <!-- Outer X lines -->
+    <path d="M4 4L28 28M28 4L4 28" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Inner circle -->
+    <circle cx="16" cy="16" r="8" fill="none" stroke="#007AFF" stroke-width="2"/>
+    
+    <!-- Center dot -->
+    <circle cx="16" cy="16" r="2" fill="#007AFF"/>
+    
+    <!-- Small accent lines -->
+    <path d="M8 8L12 12M20 8L24 12M8 24L12 20M20 24L24 20" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- EdgeXRP text (small) -->
+  <text x="32" y="56" text-anchor="middle" fill="#007AFF" font-family="Arial, sans-serif" font-size="8" font-weight="bold">EDGE</text>
+</svg>

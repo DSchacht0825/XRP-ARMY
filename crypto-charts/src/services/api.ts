@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://xrp-army-production.up.railway.app/api'
+  ? 'https://api.edgexrp.com/api'
   : 'http://localhost:5001/api';
 
 export interface ApiResponse<T> {
