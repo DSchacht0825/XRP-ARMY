@@ -30,6 +30,10 @@ const TradingSignals: React.FC<TradingSignalsProps> = ({ currentPrices, marketDa
   // Admin override for owner access - bypasses payment
   const isAdminUser = user?.email === 'schacht.dan@gmail.com';
   
+  // Debug admin check
+  console.log('🔑 Admin check - User email:', user?.email);
+  console.log('🔑 Is admin user:', isAdminUser);
+  
   // Enhanced premium detection with admin override
   const hasActivePremium = isAdminUser || isPremium || user?.plan === 'premium' || user?.isActiveSubscription;
 

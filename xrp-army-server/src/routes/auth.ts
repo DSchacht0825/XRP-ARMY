@@ -22,8 +22,8 @@ router.post('/init-admin', async (req, res) => {
     const result = await AuthService.createAdminUser(
       'admin', 
       'schacht.dan@gmail.com', 
-      'admin12345', 
-      'premium'
+      'J3sus1981!', 
+      'elite'
     );
     
     console.log('✅ Admin user initialized successfully');
@@ -33,7 +33,7 @@ router.post('/init-admin', async (req, res) => {
       message: 'Admin user initialized',
       data: {
         email: 'schacht.dan@gmail.com',
-        plan: 'premium',
+        plan: 'elite',
         status: 'active'
       }
     });

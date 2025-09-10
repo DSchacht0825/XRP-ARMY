@@ -7,7 +7,7 @@ export interface User {
   username: string;
   email: string;
   password_hash: string;
-  plan: 'basic' | 'premium';
+  plan: 'basic' | 'premium' | 'elite';
   is_active_subscription?: boolean;
   subscription_status?: 'active' | 'cancelled' | 'expired' | 'pending';
   subscription_ends_at?: Date;

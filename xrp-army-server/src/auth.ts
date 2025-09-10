@@ -179,7 +179,7 @@ export class AuthService {
     };
   }
 
-  static async createAdminUser(username: string, email: string, password: string, plan: 'premium'): Promise<AuthResponse> {
+  static async createAdminUser(username: string, email: string, password: string, plan: 'premium' | 'elite'): Promise<AuthResponse> {
     console.log('🔧 Creating/updating admin user:', email);
     
     // Hash password
@@ -192,14 +192,15 @@ export class AuthService {
       // Update existing user to premium admin
       const updatedUser = await database.updateUser(existingUser.id!, {
         password_hash: passwordHash,
-        plan: 'premium',
+        plan: plan as 'premium' | 'elite',
         is_premium: true,
         is_active_subscription: true,
-        subscription_status: 'active',
-        subscription_ends_at: '2026-12-31 23:59:59',
-        subscription_id: 'admin_override_premium'
+        subscription_status: 'active' as const,
+        subscription_ends_at: new Date('2026-12-31 23:59:59'),
+        subscription_id: `admin_override_${plan}`
       });
       
+      if (!updatedUser) throw new Error('Failed to update admin user');
       const token = this.generateToken(updatedUser);
       
       console.log('✅ Admin user updated successfully');
@@ -223,12 +224,12 @@ export class AuthService {
         username,
         email,
         password_hash: passwordHash,
-        plan: 'premium',
+        plan: plan as 'premium' | 'elite',
         is_premium: true,
         is_active_subscription: true,
-        subscription_status: 'active',
-        subscription_ends_at: '2026-12-31 23:59:59',
-        subscription_id: 'admin_override_premium'
+        subscription_status: 'active' as const,
+        subscription_ends_at: new Date('2026-12-31 23:59:59'),
+        subscription_id: `admin_override_${plan}`
       };
       
       const newUser = await database.createUser(userData);
