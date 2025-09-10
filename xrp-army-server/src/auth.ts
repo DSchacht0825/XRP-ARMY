@@ -179,6 +179,79 @@ export class AuthService {
     };
   }
 
+  static async createAdminUser(username: string, email: string, password: string, plan: 'premium'): Promise<AuthResponse> {
+    console.log('🔧 Creating/updating admin user:', email);
+    
+    // Hash password
+    const passwordHash = await this.hashPassword(password);
+    
+    // Check if user exists
+    const existingUser = await database.getUserByEmail(email);
+    
+    if (existingUser) {
+      // Update existing user to premium admin
+      const updatedUser = await database.updateUser(existingUser.id!, {
+        password_hash: passwordHash,
+        plan: 'premium',
+        is_premium: true,
+        is_active_subscription: true,
+        subscription_status: 'active',
+        subscription_ends_at: '2026-12-31 23:59:59',
+        subscription_id: 'admin_override_premium'
+      });
+      
+      const token = this.generateToken(updatedUser);
+      
+      console.log('✅ Admin user updated successfully');
+      
+      return {
+        user: {
+          id: updatedUser.id!,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          plan: updatedUser.plan,
+          isActiveSubscription: true,
+          subscriptionStatus: 'active',
+          subscriptionEndsAt: '2026-12-31T23:59:59.000Z'
+        },
+        token,
+        expiresIn: JWT_EXPIRES_IN
+      };
+    } else {
+      // Create new admin user
+      const userData = {
+        username,
+        email,
+        password_hash: passwordHash,
+        plan: 'premium',
+        is_premium: true,
+        is_active_subscription: true,
+        subscription_status: 'active',
+        subscription_ends_at: '2026-12-31 23:59:59',
+        subscription_id: 'admin_override_premium'
+      };
+      
+      const newUser = await database.createUser(userData);
+      const token = this.generateToken(newUser);
+      
+      console.log('✅ Admin user created successfully');
+      
+      return {
+        user: {
+          id: newUser.id!,
+          username: newUser.username,
+          email: newUser.email,
+          plan: newUser.plan,
+          isActiveSubscription: true,
+          subscriptionStatus: 'active',
+          subscriptionEndsAt: '2026-12-31T23:59:59.000Z'
+        },
+        token,
+        expiresIn: JWT_EXPIRES_IN
+      };
+    }
+  }
+
   static async logout(token: string): Promise<void> {
     try {
       await database.deleteSession(token);

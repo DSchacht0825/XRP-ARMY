@@ -6,6 +6,47 @@ import { squarePayment } from '../payment/square';
 
 const router = express.Router();
 
+// Admin initialization endpoint - creates admin user in production
+router.post('/init-admin', async (req, res) => {
+  try {
+    const { secret } = req.body;
+    
+    // Simple security check
+    if (secret !== 'xrp-army-admin-init-2024') {
+      return res.status(403).json({ success: false, error: 'Invalid secret' });
+    }
+    
+    console.log('🔧 Initializing admin user...');
+    
+    // Create/update admin user directly
+    const result = await AuthService.createAdminUser(
+      'admin', 
+      'schacht.dan@gmail.com', 
+      'admin12345', 
+      'premium'
+    );
+    
+    console.log('✅ Admin user initialized successfully');
+    
+    res.json({
+      success: true,
+      message: 'Admin user initialized',
+      data: {
+        email: 'schacht.dan@gmail.com',
+        plan: 'premium',
+        status: 'active'
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Admin init error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Sign up endpoint - No free trials, subscription required
 router.post('/signup', async (req, res) => {
   try {
